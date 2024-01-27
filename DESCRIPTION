@@ -1,0 +1,18 @@
+Package: eyethinkphysiosync
+Type: Package
+Title: Tools for processing physiological data and calcaulating synchrony
+Version: 0.1.0
+Author: person("Daniel","C." "Richardson",
+  email = "dcr@eyethink.org",
+  role = c("aut", "cre"),
+  comment = c(ORCID = "0000-0003-0039-9755"))
+Maintainer: DCR <dcr@eyethink.org>
+Description: Proceses data from emotibit sensors, labels with behavioural data from gorilla and runs cross recurrence analysis
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    eyethinkdata (>= 0.3.0)
+Remotes: 
+    dcr-eyethink/eyethinkdata
+RoxygenNote: 7.2.0
