@@ -16,3 +16,5 @@ Depends:
 Remotes: 
     dcr-eyethink/eyethinkdata
 RoxygenNote: 7.2.0
+URL: https://github.com/dcr-eyethink/eyethinkphysiosync
+BugReports: https://github.com/dcr-eyethink/eyethinkphysiosync/issues
