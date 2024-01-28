@@ -1,6 +1,6 @@
 Package: eyethinkphysiosync
 Type: Package
-Title: Tools for processing physiological data and calcaulating synchrony
+Title: Tools for processing physiological data and calculating synchrony
 Version: 0.1.0
 Author: person("Daniel","C." "Richardson",
   email = "dcr@eyethink.org",
@@ -16,5 +16,9 @@ Depends:
 Remotes: 
     dcr-eyethink/eyethinkdata
 RoxygenNote: 7.2.0
-URL: https://github.com/dcr-eyethink/eyethinkphysiosync
+URL: https://github.com/dcr-eyethink/eyethinkphysiosync, https://dcr-eyethink.github.io/eyethinkphysiosync/
 BugReports: https://github.com/dcr-eyethink/eyethinkphysiosync/issues
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
