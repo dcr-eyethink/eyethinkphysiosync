@@ -14,6 +14,41 @@ knitr::opts_chunk$set(
 )
 ```
 
+This is a toolbox for procssesing and analysing data from emotibit sensors. It will collate the physio data, re running heart rate analyses with heart py, if required. It will then associate the data with logs, obersational data, or output from a gorilla experiment, labelling the stimuli and attaching behavioural data. Finally, it contains tools for cross recurrence quantification analysis. It uses the eyethinkdata package, which will be installed if you don't have it.
+
+Here's how to get the latest version (always recommended as there's a fair bit of development going on)
+
+```{r eval=FALSE}
+devtools::install_github("dcr-eyethink/eyethinkphysiosync")
+```
+
 ```{r setup}
 library(eyethinkphysiosync)
 ```
+
+There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process.
+
+## Processing raw emotibit data
+
+This 
+
+### Emotibit file organisation and sensor ID
+
+### Compiling and processing emotibit data
+
+## Behavioural data
+
+### Format of trial data and participant data
+
+### Processing gorilla standardised task
+
+### Linking physio and behavioural
+
+### Filtering physio
+
+## Cross recurrence analysis
+
+### Quantifying trials/stimuli
+
+### Windowed analysis for timecourse
+

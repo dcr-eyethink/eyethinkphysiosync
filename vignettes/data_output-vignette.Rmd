@@ -1,0 +1,36 @@
+---
+title: "Data types and files from Eyethink PhysioSync toolbox"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{data_output-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Here’s an explanation of each of the data files produced by the eyethinkphysiosync. The key thing is to think about what is on each row of the data set, which is stated in the titles below
+
+## pd.csv - participants
+This has all we know about individual participants (demographics, debriefing notes, manipulation checks) and their experimental session (date, time, experiment version, conditions). If they carried out some sort of rating or performance task at the end of the main experiment, that data will be here in summary form. There is also data about the mean EDA (media) and range which is used to exclude anomalous EDA data, eg if the sensor wasn’t working well. The key column is pid = participant ID, which ties all this data together. 
+
+## ed.csv - physiological sample
+These files have one row per person, per physiological sample, per measurement during the experiment. Since we have, eg, 15 samples per second for EDA measurements, these can be very large files. The time codes are given in column t as universal time codes (utc) which you can convert in R or using an online converter. More useful is tt, which is the time in seconds from the onset of the experimental trial. The different physiological signals are identified by the dv column (note EDA is referred to as EA here), and the data is given both in raw form, and in the norm which has been normalised/z-scored for that individual participant. There are also columns to help identify the trials (typically, category, condition, stim, item). By filtering this data set can be used to plot the time course of physiological signals over the course of individual stimuli.
+
+## td.csv - trials
+This data set is probably most useful for analysis and inferential statistics, as it contains one row per participant, per trial or stimulus presented. As well as information identifying the trial (category, condition, stim, item) there will be behavioural data captured by gorilla post presentation, such as their ratings of the stimuli. If there was a behavioural test at the end of the experiment about this particular item (eg a memory test), then that data will be summarised and reported here. 
+There is summary physiological data derived from ed.csv, such as the mean and range of heart rate (eg raw_mean_HR), in raw and norm format. And finally, there are summary statistics from cross recurrence analysis that are calculated by averaging over rows of r.csv. Typically in our analyses, we look at DET_EA, which is the determinism in the EDA signal, and is the signal pf physiological synchrony that we find has the strongest link to engagement. Note that you may see NAs in these columns for some people - these wil be cases where the sensor failed or got a bad signal. 
+
+## sd.csv - stimuli
+This file is derived from all the others above, and summarises all the data we have to produce means for individual items or stimuli that can be compared to other external data. For example, you could rank movie trailers from most to least engaging, and then try and correlate that with their global box office takings.  
+
+## r.csv - dyads of trials
+This is the output from our cross recurrence quantification analysis (CRQA). The analysis works by calculating the recurrence between pairs of time series, that we call dyads. For us, these times series are of the physiological signals from two people looking at the same stimulus. So for every trial, we have one row for every dyad of participants who saw it, for each of the physiological measures (given in dv column). There is the standard information to identify the trial, as well as the to identify the two participants (pinfo1 and pinfo2). Usually, we look at the recurrence between everyone who saw the same stimulus in the same condition, but sometimes we might be interested in contrasting sub groups based upon who those people are in the dyads (for example, men vs women). If so then sgroup will tell you if the two people in the dyad are from the same ingroup (eg it will say in if they are both women or both men) or out groups (eg out for one man one woman), and pgroup will tell you, for the in-groups, which groups the two people are a member of. To get the cross recurrence values that are in a particular row of td.csv (say participant Joe looking at stimulus A) all we do is average across every row in which participant Joe is one of the two people in dyad, and they are both looking at A.  Again, we are most interested in the DET measure here. 
+
+## rw.csv - recurrence of dyads per second
+This is the same as r.csv above, only the trial is split into chunks of time (typically 1 second), so that we can look at the time course of recurrence values. 
