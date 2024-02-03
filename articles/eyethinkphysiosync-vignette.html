@@ -41,6 +41,7 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/data_output-vignette.html">Data types and files from Eyethink PhysioSync toolbox</a>
     <a class="dropdown-item" href="../articles/eyethinkphysiosync-vignette.html">eyethinkphysiosync-vignette</a>
   </div>
 </li>
@@ -77,12 +78,75 @@
 
     
     
+<p>This is a toolbox for procssesing and analysing data from emotibit
+sensors. It will collate the physio data, re running heart rate analyses
+with heart py, if required. It will then associate the data with logs,
+obersational data, or output from a gorilla experiment, labelling the
+stimuli and attaching behavioural data. Finally, it contains tools for
+cross recurrence quantification analysis. It uses the eyethinkdata
+package, which will be installed if you don’t have it.</p>
+<p>Here’s how to get the latest version (always recommended as there’s a
+fair bit of development going on)</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dcr-eyethink/eyethinkphysiosync"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dcr-eyethink/eyethinkphysiosync" class="external-link">eyethinkphysiosync</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: eyethinkdata</span></span>
 <span><span class="co">#&gt; Loading required package: data.table</span></span>
 <span><span class="co">#&gt; Loading required package: ggplot2</span></span></code></pre></div>
-  </main>
+<p>There are three main stages to this process: processing the raw
+emotibit data, trimming and integrating the data with a record of
+participants’ experiences and behaviour, and then optionally running a
+cross recurrence analysis. In each case, there are single wrapper
+functions to achieve each of these in one command, but in this vignette
+I’ll walk through the steps to show you the process.</p>
+<div class="section level2">
+<h2 id="processing-raw-emotibit-data">Processing raw emotibit data<a class="anchor" aria-label="anchor" href="#processing-raw-emotibit-data"></a>
+</h2>
+<p>This</p>
+<div class="section level3">
+<h3 id="emotibit-file-organisation-and-sensor-id">Emotibit file organisation and sensor ID<a class="anchor" aria-label="anchor" href="#emotibit-file-organisation-and-sensor-id"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="compiling-and-processing-emotibit-data">Compiling and processing emotibit data<a class="anchor" aria-label="anchor" href="#compiling-and-processing-emotibit-data"></a>
+</h3>
+</div>
+</div>
+<div class="section level2">
+<h2 id="behavioural-data">Behavioural data<a class="anchor" aria-label="anchor" href="#behavioural-data"></a>
+</h2>
+<div class="section level3">
+<h3 id="format-of-trial-data-and-participant-data">Format of trial data and participant data<a class="anchor" aria-label="anchor" href="#format-of-trial-data-and-participant-data"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="processing-gorilla-standardised-task">Processing gorilla standardised task<a class="anchor" aria-label="anchor" href="#processing-gorilla-standardised-task"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="linking-physio-and-behavioural">Linking physio and behavioural<a class="anchor" aria-label="anchor" href="#linking-physio-and-behavioural"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="filtering-physio">Filtering physio<a class="anchor" aria-label="anchor" href="#filtering-physio"></a>
+</h3>
+</div>
+</div>
+<div class="section level2">
+<h2 id="cross-recurrence-analysis">Cross recurrence analysis<a class="anchor" aria-label="anchor" href="#cross-recurrence-analysis"></a>
+</h2>
+<div class="section level3">
+<h3 id="quantifying-trialsstimuli">Quantifying trials/stimuli<a class="anchor" aria-label="anchor" href="#quantifying-trialsstimuli"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="windowed-analysis-for-timecourse">Windowed analysis for timecourse<a class="anchor" aria-label="anchor" href="#windowed-analysis-for-timecourse"></a>
+</h3>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
