@@ -30,11 +30,34 @@ There are three main stages to this process: processing the raw emotibit data, t
 
 ## Processing raw emotibit data
 
-This 
-
-### Emotibit file organisation and sensor ID
+To harvest the data from emotbits, look on the sensor SD card for all files created during the experiment period (the dates are encoded in filenames). Copy all the files (.csv and .json) from the SD cards into one data folder on computer. 
 
 ### Compiling and processing emotibit data
+
+The first step in processing the data is to place the files into folders that are named after the sensors. This can be the serial number that pops up on the osciloscope, or we can translate that code into a sensor name. By default, the function uses the sensor names from the eyethink lab, but a differnt .csv filename can be supplied. It will also default to duplicating the datafolder (to emotibit_data in working directory) rather than overwriting it.
+
+```{r}
+emotibit_session_folders(datafolder = "raw_emotibit",sensor_id = "eyethink")
+```
+
+Now we need to use the emotibit data parser to generate different .csv files for each measurement. If the function can't find your emotibit data parser app, it will ask for the location. During this process, the app will pop up a window to inform you of its progress
+
+```{r message=FALSE, warning=FALSE}
+emotibit_parser(datafolder = "emotibit_data")
+```
+
+Next we can reprocess the heart rate signal using heart py and the PG sensor data. This may not be necessary if/when the emotibit uses a better algorithm on its chip. 
+
+```{r}
+emotibit_heartpy(datafolder = "emotibit_data")
+```
+
+Finally, we need to compile all the data for the measurements that we care about
+
+```{r}
+emotibit_compile()
+```
+
 
 ## Behavioural data
 
