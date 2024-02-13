@@ -26,7 +26,9 @@ devtools::install_github("dcr-eyethink/eyethinkphysiosync")
 library(eyethinkphysiosync)
 ```
 
-There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process.
+There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process. 
+
+We will be processing data from a little experiment in which three participants watched 60 second advert and a 2 minute clip of a drama show.
 
 ## Processing raw emotibit data
 
@@ -34,7 +36,7 @@ To harvest the data from emotbits, look on the sensor SD card for all files crea
 
 ### Compiling and processing emotibit data
 
-The first step in processing the data is to place the files into folders that are named after the sensors. This can be the serial number that pops up on the osciloscope, or we can translate that code into a sensor name. By default, the function uses the sensor names from the eyethink lab, but a differnt .csv filename can be supplied. It will also default to duplicating the datafolder (to emotibit_data in working directory) rather than overwriting it.
+The first step in processing the data is to place the files into folders that are named after the sensors. This can be the serial number that pops up on the osciloscope, or we can translate that code into a sensor name. By default, the function uses the sensor names from the eyethink lab, but a differnt .csv filename can be supplied. It will also default to duplicating the datafolder (to emotibit_data in working directory), but if you want to overwrite/reorganize the original folder, set destination = NULL.
 
 ```{r}
 emotibit_session_folders(datafolder = "raw_emotibit",sensor_id = "eyethink")
@@ -52,20 +54,89 @@ Next we can reprocess the heart rate signal using heart py and the PG sensor dat
 emotibit_heartpy(datafolder = "emotibit_data")
 ```
 
-Finally, we need to compile all the data for the measurements that we care about
+Finally, we need to compile all the data for the measurements that we care about. This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable named ed
 
 ```{r}
-emotibit_compile()
+processed_emotibit_data <- emotibit_compile(edv = c("HR","EA","ACC"),datafolder = "emotibit_data")
 ```
 
+It also returns various import checks and plots of the data. For example, below we show a histogram of the start times for the three sessions
+
+```{r}
+processed_emotibit_data$p_start
+```
+
+### Wrapper function
+
+You can achieve everything above in one function call, that just runs through the processes in turn:
+
+```{r eval=F}
+processed_emotibit <- emotibit_process(datafolder = "raw_emotibit")
+```
 
 ## Behavioural data
 
+Now we can gather the behavioural data so we know what the participants were doing and seeing, and importantly, when. We want this trial data in the form of a data.table, typically called td, that has one row per person, per stimulus that they saw. This could be one of many 30 sec ads a person sees, or a 2 hour movie that each person sees once. 
+
 ### Format of trial data and participant data
+
+Here's an example of the minimal information that we need in the trial data
+
+```{r}
+fread("eg_td.csv")
+```
+
+The first 4 columns here are required for the processes we will carry out below:
+**pid** the paritcipant ID
+**eid** the name of the sensor that the participant wore
+**starttime** The UTC time code (https://www.unixtimestamp.com) when the stimulus started
+**stoptime** end time of the stimulus
+
+In addition you need one or more columns to pick out a unique trial or stimulus event (something that each participant only sees once). This could be the stimulus name, for example. Later we will be carrying out a cross recurrence analysis on all participants who experienced this same event, and this is how we will identify them.
+
+Typically, I use more than one column, so that I can include information to identify types of trial or conditions. By convention, I use category, condition, item and stim columns, as we see here. But whatever is there will be populated throughout the data we generate. You can also include here any behavioural information about response to the stimuli, such as rating ro memory tasks. This data can be entered by hand into a spreadsheet, or taken from a experiment log, or derived from gorilla data.
 
 ### Processing gorilla standardised task
 
+Many of the experiments run in the eyethink lab use a standardized task called snappily *AV block multiple stim types*. There are functions to automatically process data from the various versions of this task to generate summary data.
+
+```{r}
+processed_gorilla <- gorilla_physio_presentation()
+```
+
+There are 2 outputs here. pd is the participant data, and looks like this for our toy experiment
+
+```{r}
+processed_gorilla$pd
+```
+
+And the trial data
+
+```{r}
+processed_gorilla$td
+```
+
+As well as the important trial start and stop times, we have the participants responses on the various rating tasks after each stimuli. We can now match up this trial information with the physiological data
+
 ### Linking physio and behavioural
+
+The function that joins together the behavioural and emotibit data is called physio_merge(). It can take a while as there is a lot of processing. Before doing so, it's a good idea to run it with stop_at_plotcheck = T. This gives you a graphical representation of where you have emotibit and where you have gorilla data. Time is on the x axis, with days in different panels, and the different emotibit sensors are arrayed on the y axis. The emotibit sensor ids are read off from the SD cards for the emotibit data, and entered by the participant in the gorilla data. 
+
+```{r}
+physio_merge(processed_emotibit ,processed_gorilla,stop_at_plotcheck = T )
+```
+
+The black lines are where you have gorilla data (with the pids written nearby), and the red lines are the period for which you have physiological data. In a perfect world, all the red lines would appear over the black bars. But you may get times where the red lines don't fully cover the black areas, where the sensor battery gave out for example, or someone forgot to start recording. The thing is look out for are times in which you have a black bar and a red line at the same time, but they aren't in top of each other. That has occurred at the top of this plot. A reasonable explanation is that the participant has entered the eid incorrectly. Here they appear to have mistake the red case for an orange (to be fair, it is an orangey-red). Other typical mistakes are putting a 9 for a 6, for example. It's a good idea to confirm these errors by looking in the experiment log, where they experimenter should have noted the eid as well as a back up. 
+
+There's a function to handle those corrections quickly. You just give it a data.table of pids and their correct eids, and it will go through your pd, td and any other data passed in a list to make correction. 
+
+```{r}
+processed_gorilla <- gorilla_eid_corrections(processed_gorilla, corrections=data.table(pid=c(10370290),eid=c("red4")))
+
+```
+
+Another error that can occur is that the red lines will systematical be an hour off of the black bars in every case. This suggests that there has been some problem with the time zones. The emotibit chips don't handle British daylight savings very well. To correct for this, re run emotibit_compile() with hour_adjust = 1 or -1.
+
 
 ### Filtering physio
 
@@ -74,4 +145,16 @@ emotibit_compile()
 ### Quantifying trials/stimuli
 
 ### Windowed analysis for timecourse
+
+
+
+
+
+
+
+
+
+
+
+
 

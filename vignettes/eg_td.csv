@@ -1,0 +1,7 @@
+pid,eid,starttime,stoptime,category,condition,item,stim
+9848500,orange5,1701171020,1701171240,politics,Yes,yes_vid,Yes.mp4
+9848500,orange5,1701171269,1701171429,politics,Yes,no_vid,No.mp4
+9848771,blue4,1701173489,1701173709,politics,Yes,yes_vid,Yes.mp4
+9848771,blue4,1701173723,1701173883,politics,Yes,no_vid,No.mp4
+9848965,green6,1701175506,1701175726,politics,No,yes_vid,Yes.mp4
+9848965,green6,1701175747,1701175907,politics,No,no_vid,No.mp4

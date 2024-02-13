@@ -29,18 +29,18 @@ for (session in sessionfolders){
 
     # calculate ACC
 
-    # d <- emotibit_compile(dvs=c("AX","AY","AZ"),raw=F,
-    #                       datafolder  = session,samplehertz=samplehertz,savefile = F)$ed
-    #
-    # newfile <- paste0(session,"/emotibit_data_ACC.csv")
-    # print(d)
-    # d <- dcast(d,formula = utc~dv,value.var = "V1",fun.aggregate = mean)
-    #
-    # d[,ACC:=(AX^2+AY^2+AZ^2)^.5]
-    #
-    # d <- d[, .(EpochTimestamp=utc,TypeTag="ACC",AX,AY,AZ,ACC)]
-    #
-    # write.csv(d,newfile)
+    d <- emotibit_compile(edv =c("AX","AY","AZ"),logging=F,
+                          datafolder  = session)$ed
+
+    d <- dcast(d,formula = utc~dv,value.var = "V1",fun.aggregate = mean)
+
+    d[,ACC:=(AX^2+AY^2+AZ^2)^.5]
+
+    d <- d[, .(EpochTimestamp=utc,TypeTag="ACC",AX,AY,AZ,ACC)]
+
+    fwrite(d,file = paste0(session,"/","emotibit_data_ACC.csv"))
+
+    cat("\t ACC calculated")
 
     # rename HR
 

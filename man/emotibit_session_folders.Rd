@@ -8,7 +8,7 @@ Will default to using the eyethink lab key to translate the emotibit serial IDs 
 emotibit_session_folders(
   datafolder = NULL,
   sensor_id = "eyethink",
-  duplicate_to = "emotibit_data"
+  destination = "emotibit_data"
 )
 }
 \arguments{
@@ -16,7 +16,7 @@ emotibit_session_folders(
 
 \item{sensor_id}{key to use: "eyethink", "none" or name of file with headings eid and serialid. If blank or it can't find the file, it will ask for location}
 
-\item{duplicate_first}{before processing, copy all the files to this new folder in working. Set to NULL if overwriting}
+\item{destination}{name of folder where sorted files end up. Set to NULL if overwriting}
 }
 \value{
 the name of the (new) datafolder
