@@ -1,16 +1,17 @@
 physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
                                  td=NULL,sinfo=NULL,pd=NULL,sd=NULL,
-                                 ed=NULL,dinfo=c("pid"),normlevel=1,pinfo=NULL,
-                                 gd=NULL, filter_prop_min=0.5, normvar="filter",normvalue=1,
-                                 baseline=FALSE,hour_adjust=0,trim_eda=T,stop_at_plotcheck=F,
-                                 plot_eda_outliers=F){
+                                 ed=NULL,condcols=c("category","condition","item","stim"),
+                                 normlevel=1,pinfo=NULL,
+                                 gd=NULL, filter_prop_min=0.5,
+                                 baseline=FALSE,hour_adjust=0,stop_at_plotcheck=F,
+                                 eda_check=list(mean=20,range_min=0.01,low=0.03,high=25)){
   #' Label physio data with trial info
   #' labels the data stream with participant and condition info
   #' based on eid and timestamp
   #' @param ed physio data, post compile
   #' @param td trial data, including eid, cond(s), starttime and stoptime
-  #' @param dinfo the cols in td that pick out unique trial. If single rec, just audience ID
-  #' @param normlevel how many of those dinfo cols should be used to norm
+  #' @param condcols the cols in td that pick out unique trial. If each person just saw the same single event, set to NULL
+  #' @param normlevel defaults to 1 which is zscoring per person. Set to 2+ for each additional column of condcols to use
   #' @param normvar use the period when normvar=normvalue for normalising
   #' @param normvalue the raw value of normvar that you want to include in normalising
   #' @param baseline do you want to z score using sd (F default) or just baseline shift (T)
@@ -34,6 +35,7 @@ physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
   # we're now matching based on UTC rather than converted posix times
   ed$t <- ed$utc+hour_adjust*1000
 
+  dinfo <- c("pid",condcols)
 
   if("start_time" %in% colnames(td)){setnames(td,old ="start_time",new="starttime" )}
   if("stop_time" %in% colnames(td)){setnames(td,old ="stop_time",new="stoptime" )}
@@ -55,8 +57,8 @@ physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
                             aes(x=exp_begin,
                                 xend=exp_end,
                                 y=eid,yend=eid,label=pid))+
-      geom_segment(size=4,alpha=1)+geom_text(size=2,nudge_y=.5)+
-      geom_segment(data=sinfo[filter==1],inherit.aes = F,size=1.5,
+      geom_segment(linewidth=4,alpha=1)+geom_text(size=2,nudge_y=.5)+
+      geom_segment(data=sinfo[filter==1],inherit.aes = F,linewidth=1.5,
                    aes(y=eid,yend=eid,
                        x=utc_start,
                        xend=utc_end,
@@ -64,15 +66,11 @@ physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
       #scale_color_manual(values = c("green3","red"))+
       facet_wrap(day~.,scales = "free_x")+theme_bw()+theme(legend.position = "none")
 
-    # sessiondata <-   (ggplot(sinfo[filter==1],aes(y=eid,yend=eid,x=utc_start,xend=utc_end))+
-    #                     geom_segment(data=td[,.(exp_begin=min(starttime),exp_end=max(stoptime),day=day),by=.(pid,eid)],
-    #                                  inherit.aes=F,aes(x=exp_begin,xend=exp_end,y=eid,yend=eid),size=4,alpha=.5)+
-    #                     geom_segment(colour="red"))+facet_wrap(day~.,scales = "free_x")
-
     if (stop_at_plotcheck){return(sessiondata)}else{print(sessiondata)}
   }
 
 
+  # makes tid, wich is a code for every unique person+trial
   setkey(ed,t)
   td <- data.frame(td)
   if(length(dinfo)>1){
@@ -94,135 +92,107 @@ physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
     by=.(tid,nid)]
   close(pb)
 
-  td_tid <- data.table(data.frame(td)[,c("tid",dinfo,pinfo)])[!duplicated(tid)]
-  setkey(td_tid,tid)
-  setkey(emptrial,tid)
-  emptrial <- td_tid[emptrial]
-
+  ed <- copy( pid_merge(emptrial,td[!duplicated(tid),.SD,.SDcols = c("tid",dinfo,pinfo)],
+                         link = "tid") )
 
   ## set tt to trial time
-  setnames(emptrial,"V1","raw")
-  emptrial[,tt := as.numeric(t-min(t),units="secs"),by=.(tid)]
+  setnames(ed,"V1","raw")
+  ed[,tt := as.numeric(t-min(t),units="secs"),by=.(tid)]
 
-  ## exclude the filtered data from norm calculation
-  #  emptrial[filter==1,norm := ((raw - mean(raw) )/ sd(raw)),by=.(nid,dv)]
+
+  ############  check and ID EDA problems
+
+if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
+
+    # flag individuals from EDA
+    pde <- ed[dv=="EA",.(mean=mean(raw,na.rm=T),range=max(raw,na.rm=T)- min(raw,na.mr=T),filter=1),by=.(pid,eid)]
+
+    pde[mean>eda_check$mean | range < eda_check$range_min,filter:=0]
+
+    if (dim( pde[filter==0])[1]>0){
+      cat("\nHere are people excluded because of high mean eda or low range:\n")
+      pde[filter==0]}
+
+    # filter out individuals in main data set
+    ed[dv=="EA" & pid %in% pde[filter==0]$pid,filter:=0]
+
+    # filter out data points
+    ed[dv=="EA" & (raw>eda_check$high | raw < eda_check$low) ,filter:=0]
+
+
+
+}
+
+
+  ############  normalise / zscore
 
   if (baseline==FALSE){
 
-    emptrial[filter==1,norm := ((raw - mean(.SD[get(normvar)==normvalue]$raw,,na.rm=T) )/
-                                  sd(.SD[get(normvar)==normvalue]$raw,na.rm=T)),by=.(nid,dv)]
+    # emptrial[filter==1,norm := ((raw - mean(.SD[get(normvar)==normvalue]$raw,na.rm=T) )/
+    #                               sd(.SD[get(normvar)==normvalue]$raw,na.rm=T)),by=.(nid,dv)]
+
+    ed[filter==1, norm:=scale(raw),by=.(nid,dv)]
+
+
   }else{
-    #cat("am using baseline")
-    emptrial[filter==1,norm := (raw - mean(.SD[get(normvar)==normvalue]$raw,na.rm=T) ),by=.(nid,dv)]
+   stop("I haven't implemented norming by baselines yet")
+     #cat("am using baseline")
+   # emptrial[filter==1,norm := (raw - mean(.SD[get(normvar)==normvalue]$raw,na.rm=T) ),by=.(nid,dv)]
 
   }
 
-  emptrial[,filter_prop := (mean(filter)+1)/2,by=.(nid,dv) ]
+
+  ############  calculate trial means
 
 
+  ess <-  rbind(ed[filter==1 ,
+           .(x="raw",mean=mean(raw,na.rm=T),sd=sd(raw,na.rm=T),
+             min=min(raw,na.rm=T),max=max(raw,na.rm=T),
+           range=max(raw,na.rm=T)-min(raw,na.rm=T)),by=.(tid,dv)],
+        ed[filter==1 ,
+                 .(x="norm",mean=mean(norm,na.rm=T),sd=sd(norm,na.rm=T),
+                   min=min(norm,na.rm=T),max=max(norm,na.rm=T),
+                   range=max(norm,na.rm=T)-min(norm,na.rm=T)),by=.(tid,dv)])
 
-  ess <- emptrial[filter==1 & filter_prop>filter_prop_min,
-                  .(filter_prop=mean(filter_prop,na.rm=T),
-                    raw_mean=mean(raw,na.rm=T),raw_sd=sd(raw,na.rm=T),
-                    raw_min=min(raw,na.rm=T),raw_max=max(raw,na.rm=T),
-                    raw_range=max(raw,na.rm=T)-min(raw,na.rm=T),
-                    norm_mean=mean(norm,na.rm=T),norm_sd=sd(norm,na.rm=T),
-                    norm_min=min(norm,na.rm=T),norm_max=max(norm,na.rm=T),
-                    norm_range=max(norm,na.rm=T)-min(norm,na.rm=T)),
-                  ,by=.(tid,dv)]
+  evars <- c("mean","sd","min","max","range")
+  td <- pid_merge(td,dcast(ess,tid ~ x+dv,value.var = evars),link = "tid")
 
-  ess <- dcast.data.table(ess,tid ~ dv,
-                          value.var = colnames(ess)[c(3:13)])
-  ess$tid <- factor(ess$tid)
-  td$tid<- factor(td$tid)
-  setkey(ess,tid)
-  setkey(td,tid)
-  td <- ess[td]
-
-  setcolorder(td,c(seq(from=dim(ess)[2]+1,to=dim(td)[2]),1:dim(ess)[2]))
-
-  ed <- emptrial
+  td <- pid_merge(td, dcast(ed[,.(filterprop=mean(filter)),by=.(tid,dv)],
+                            tid~dv,value.var = "filterprop",), link = "tid")
 
 
-  cat("Trials with missing physio data\n")
-  print(td[is.na(raw_mean_EA),.N,by=.(eid,pid)])
+  setnames(td,old = unique(ed$dv) ,new=paste0("filter_prop_",unique(ed$dv)))
 
-  if (trim_eda){
-
-    # flag indivduals from EDA
-    pde <- ed[dv=="EA",.(meda=mean(raw,na.rm=T),
-                         min=min(raw,na.rm=T),
-                         max=max(raw,na.rm=T),
-                         range=max(raw,na.rm=T)-min(raw,na.rm=T)),by=.(pid,eid)]
-    setkey(pde,meda)
-    if (dim( pde[meda>20])[1]>0){
-      cat("\nHere are high eda people:\n")
-      pde[meda>20]}
-
-    # get rid of individuals higher than 25
-    pde[,filter_eda:=ifelse(meda>25,0,1)]
-    # get rid of low range
-    pde[range<0.01,filter_eda:=0]
-
-    ## merge people filters into data
-    pd <- pid_merge(pd,pde,link = c("pid","eid"))
-    td <- pid_merge(td,pde,link = c("pid","eid"))
-    ed <- pid_merge(ed,pde,link = c("pid","eid"))
-
-    ## exclude individual data points
-    ed[dv=="EA" & raw>25, filter:=0]
-    ed[dv=="EA" & raw<0.031, filter:=0]
-    ed[filter_eda==0,filter:=0]
-
-
-    if(plot_eda_outliers){
-      mypirate( ed[dv=="EA" & filter==1,mean(raw,na.rm=T),
-                   by=.(pid,eid)],dv="V1",x_condition = "eid",colour_condition = "pid",legend = F,
-                title = "Mean EDAs for each subject, split by sensor, m>20 low range excluded")
-      ggsave("eda_sensors_ex.pdf",width = 6,height=2)}
-
-
-    #################### re-z-score the EDA data now that we've excluded null readings
-
-    #ed <- ed[ filter==1 ]
-
-
-    ed[filter==1 & dv=="EA",norm:=scale(raw),by=pid]
-    ed[filter==0 & dv=="EA",norm:=NA,by=pid]
-
-    #################### fix the EDA norm values in td
-
-    neweda <- ed[dv=="EA",
-                 .(norm_mean_EA=mean(norm,na.rm=T),
-                   norm_sd_EA=sd(norm,na.rm=T)),by=dinfo]
-
-    td[,grep(grep(colnames(td),pattern = "norm",value=T),pattern = "_EA",value=T):=NULL]
-
-    #td <- pid_merge(td,neweda,link = dinfo)
-    td <- mergey(td,neweda,link = dinfo)
-  }
 
 
   ############################  calc item means
 
-  # item_vars <- setdiff(colnames(td[ , .SD, .SDcols = is.numeric]), c(dinfo ,"eid","exp_begin",
-  #                                      "exp_ver","exp_end",  "starttime", "stoptime" ,"start_time","stop_time",
-  #                                      "watched", "nid" ,"tid","filter_prop_EA", "filter_prop_HR","meda","min",
-  #                                      "max" ,"range","filter_eda"))
 
   item_vars <- c(grep(x=colnames(td[ , .SD, .SDcols = is.numeric]),pattern = "raw_",value = T),
                  grep(x=colnames(td[ , .SD, .SDcols = is.numeric]),pattern = "norm_",value = T))
 
-  # sd <- pid_merge(sd,td[,lapply(.SD, mean,na.rm=T),.SDcols=item_vars,
-  #                       by=setdiff(dinfo,"pid")],link=setdiff(dinfo,"pid"))
+  item_means <- td[,lapply(.SD, mean,na.rm=T),.SDcols=item_vars,
+                 by=setdiff(dinfo,c("pid",pinfo))]
 
-  if(!is.null(sd)){
-    sd <- mergey(sd,td[,lapply(.SD, mean,na.rm=T),.SDcols=item_vars,
-                       by=setdiff(dinfo,c("pid",pinfo))],link=setdiff(dinfo,c("pid",pinfo)))
+  if(is.null(sd)){
+    sd <- item_means
+    }else{
+    sd <- pid_merge(sd,item_means,link=setdiff(dinfo,c("pid",pinfo)))
   }
 
 
+  ############## make eda plot
 
+  if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
+
+      edaplot <- mypirate( ed[dv=="EA"],dv="raw",x_condition = "eid",colour_condition = "pid",legend = F,
+                 title = "Mean EDAs for each subject, split by sensor",dots=F)+
+      geom_point(data=td,inherit.aes = F,aes(y=mean_raw_EA,x=eid,colour=pid))+
+      geom_hline(aes(yintercept = eda_check$mean))+
+      geom_label(data=td[,.(fpp=sprintf("%1.1f%%", 100*mean(filter_prop_EA))),by=.(pid,eid)],inherit.aes = F,
+                 aes(x=eid,colour=pid,label=fpp,y=mean(td$mean_raw_EA,na.rm=T)))
+   print(edaplot)
+  }
 
   return(list(ed=ed,td=td,pd=pd,sd=sd))
 

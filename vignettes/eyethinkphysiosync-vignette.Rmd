@@ -126,19 +126,32 @@ The function that joins together the behavioural and emotibit data is called phy
 physio_merge(processed_emotibit ,processed_gorilla,stop_at_plotcheck = T )
 ```
 
-The black lines are where you have gorilla data (with the pids written nearby), and the red lines are the period for which you have physiological data. In a perfect world, all the red lines would appear over the black bars. But you may get times where the red lines don't fully cover the black areas, where the sensor battery gave out for example, or someone forgot to start recording. The thing is look out for are times in which you have a black bar and a red line at the same time, but they aren't in top of each other. That has occurred at the top of this plot. A reasonable explanation is that the participant has entered the eid incorrectly. Here they appear to have mistake the red case for an orange (to be fair, it is an orangey-red). Other typical mistakes are putting a 9 for a 6, for example. It's a good idea to confirm these errors by looking in the experiment log, where they experimenter should have noted the eid as well as a back up. 
+The black lines are where you have gorilla data (with the pids written nearby), and the red lines are the period for which you have physiological data. In a perfect world, all the red lines would appear over the black bars. But you may get times where the red lines don't fully cover the black areas, where the sensor battery gave out for example, or someone forgot to start recording. Another error that can occur is that the red lines will systematical be an hour off of the black bars in every case. This suggests that there has been some problem with the time zones. The emotibit chips don't handle British daylight savings very well. To correct for this, re run emotibit_compile() with hour_adjust = 1 or -1.
 
-There's a function to handle those corrections quickly. You just give it a data.table of pids and their correct eids, and it will go through your pd, td and any other data passed in a list to make correction. 
+A further thing is look out for are times in which you have a black bar and a red line at the same time, but they aren't in top of each other. That has occurred at the top of this plot above. A reasonable explanation is that the participant has entered the eid incorrectly. Here they appear to have mistake the red case for an orange (to be fair, it is an orangey-red). Other typical mistakes are putting a 9 for a 6, for example. It's a good idea to confirm these errors by looking in the experiment log, where they experimenter should have noted the eid as well as a back up. 
+
+There's a function to handle those corrections quickly. You just give it a data.table of pids and their correct eids, and it will go through your pd, td and any other data passed in a list to make correction. Then we can rerun the merging process and store it.
 
 ```{r}
 processed_gorilla <- gorilla_eid_corrections(processed_gorilla, corrections=data.table(pid=c(10370290),eid=c("red4")))
-
+data <- physio_merge(processed_emotibit ,processed_gorilla)
 ```
 
-Another error that can occur is that the red lines will systematical be an hour off of the black bars in every case. This suggests that there has been some problem with the time zones. The emotibit chips don't handle British daylight savings very well. To correct for this, re run emotibit_compile() with hour_adjust = 1 or -1.
+The physio_merge function spits out the plot to check your data alignment, as before, and also a plot of theeda data per person and emotibit sensor. There is a threshold (20 by default, shown as a line on the plot) such that if the mean EDA reading for someone is below that, we set filter=0 and they get excluded. Also we exclude people where the range of EDA values is small (default <0.03). In there cases that's either someone who is very sweaty or not at all sweaty, or a misplaced sensor. We also set filter=0 for individual measurements that are outside of thresholds (defaults <.01 & >25). In the trial data, td, we summarize how many measurements were excluded from each trial (you might want to throw out trials with less than a certain % of valid meaurements), and the average of those values for each person is reported as % in the plot. 
+
+The main output of this function are the set of data.tables that give you the emotitbit measurements moment by moment (ed), the trial data (td) where those are summarized over trials, the participant data (pd) summarized over people and the stimuli data (sd) summarized over stimuli items.
+
+You can save out this data into separate .csv files with one command. It will put them in a folder called 'processed' by default, or you can specify a different name
+
+```{r}
+saveout_datalist(data)
+```
+
+AVERAGE DATA OVER pids FOR PD in MERGE
+CHANGE THE SAVEOUT and READIN to use FREAD/WRITE
 
 
-### Filtering physio
+If you are just interested in the behaviour and the physiological response of individuals, you can stop here. Or, in the next step, we use the ed data to calculate the physiological synchrony between these signals using cross recurrence analysis.
 
 ## Cross recurrence analysis
 

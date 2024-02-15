@@ -7,12 +7,15 @@ Will default to using the eyethink lab key to translate the emotibit serial IDs 
 \usage{
 emotibit_session_folders(
   datafolder = NULL,
+  overwrite = F,
   sensor_id = "eyethink",
   destination = "emotibit_data"
 )
 }
 \arguments{
 \item{datafolder}{a folder of raw .csv data and .json files from multiple sessions and sensors, if blank will ask for one with system dialog}
+
+\item{overwrite}{will skip folders that already exist by default, unless set to T}
 
 \item{sensor_id}{key to use: "eyethink", "none" or name of file with headings eid and serialid. If blank or it can't find the file, it will ask for location}
 
