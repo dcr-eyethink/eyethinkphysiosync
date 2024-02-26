@@ -2,22 +2,25 @@ physio_merge <- function(processed_emotibit=NULL,processed_gorilla=NULL,
                                  td=NULL,sinfo=NULL,pd=NULL,sd=NULL,
                                  ed=NULL,condcols=c("category","condition","item","stim"),
                                  normlevel=1,pinfo=NULL,
-                                 gd=NULL, filter_prop_min=0.5,
+                                 gd=NULL,
                                  baseline=FALSE,hour_adjust=0,stop_at_plotcheck=F,
                                  eda_check=list(mean=20,range_min=0.01,low=0.03,high=25)){
   #' Label physio data with trial info
   #' labels the data stream with participant and condition info
   #' based on eid and timestamp
-  #' @param ed physio data, post compile
-  #' @param td trial data, including eid, cond(s), starttime and stoptime
+  #' @param processed_emotibit output from emotibit_process() or eomotibit_compile() if used
+  #' @param processed_gorilla output from gorilla_physio_presentation if used
+  #' @param ed physio data, post compilation, if you don't have (processed_emotibit)
+  #' @param td trial data, including pid, eid, cond(s), starttime and stoptime, if you don't have (processed_gorilla)
+  #' @param pd participant data, if you don't have (processed_gorilla)
+  #' @param sd stimuli data, if you don't have (processed_gorilla)
+  #' @param pinfo name of a column in participant data that identifies a social group
   #' @param condcols the cols in td that pick out unique trial. If each person just saw the same single event, set to NULL
   #' @param normlevel defaults to 1 which is zscoring per person. Set to 2+ for each additional column of condcols to use
-  #' @param normvar use the period when normvar=normvalue for normalising
-  #' @param normvalue the raw value of normvar that you want to include in normalising
-  #' @param baseline do you want to z score using sd (F default) or just baseline shift (T)
-  #' @param gd timecourse data that you also want labelled, optional wrapper for timecoursejoin_empatica
+  #' @param baseline not implemented yet. do you want to z score using sd (F default) or just baseline shift (T)
   #' @param hour_adjust nunmber of hours to shift physio data by, in case of GMT problem
-  #' @return labeled ed data and td with summary stats
+  #' @param eda_check set to NULL if not wanted, otherwise a list of mean, range_min, lod and high thresholds for EDA filtering
+  #' @return labeled ed, td, pd and sd data with summary stats
 
   #' @export
 
@@ -141,6 +144,12 @@ if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
 
   }
 
+  ed[,ttsec:=floor(tt)]
+  dm <- rbind(ed[filter==1,.(metric="raw",y=mean(raw,na.rm=T)),by=c(condcols,"dv","ttsec")],
+              ed[filter==1,.(metric="norm",y=mean(norm,na.rm=T)),by=c(condcols,"dv","ttsec")])
+setnames(dm,c("ttsec","dv"),c("t","edv"))
+
+
 
   ############  calculate trial means
 
@@ -160,8 +169,9 @@ if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
   td <- pid_merge(td, dcast(ed[,.(filterprop=mean(filter)),by=.(tid,dv)],
                             tid~dv,value.var = "filterprop",), link = "tid")
 
+  filter_vars <- paste0("filter_prop_",unique(ed$dv))
 
-  setnames(td,old = unique(ed$dv) ,new=paste0("filter_prop_",unique(ed$dv)))
+  setnames(td,old = unique(ed$dv) ,new=filter_vars)
 
 
 
@@ -180,13 +190,26 @@ if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
     sd <- pid_merge(sd,item_means,link=setdiff(dinfo,c("pid",pinfo)))
   }
 
+  ############################  average for pd
+
+  pd_vars <- c(grep(x=item_vars,pattern="mean_raw",value = T),
+               grep(x=item_vars,pattern="range_raw",value = T),
+               filter_vars)
+
+  pd_means <- td[,lapply(.SD, mean,na.rm=T),.SDcols=pd_vars,by=pid]
+
+  if(is.null(pd)){
+    pd <- pd_means
+  }else{
+    pd <- pid_merge(pd,pd_means)
+  }
 
   ############## make eda plot
 
   if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
 
       edaplot <- mypirate( ed[dv=="EA"],dv="raw",x_condition = "eid",colour_condition = "pid",legend = F,
-                 title = "Mean EDAs for each subject, split by sensor",dots=F)+
+                 title = "EDA for each subject, split by sensor",dots=F)+
       geom_point(data=td,inherit.aes = F,aes(y=mean_raw_EA,x=eid,colour=pid))+
       geom_hline(aes(yintercept = eda_check$mean))+
       geom_label(data=td[,.(fpp=sprintf("%1.1f%%", 100*mean(filter_prop_EA))),by=.(pid,eid)],inherit.aes = F,
@@ -194,6 +217,6 @@ if(!is.null(eda_check) & "EA" %in% unique(ed$dv)){
    print(edaplot)
   }
 
-  return(list(ed=ed,td=td,pd=pd,sd=sd))
+  return(list(ed=ed,dm=dm,td=td,pd=pd,sd=sd))
 
 }

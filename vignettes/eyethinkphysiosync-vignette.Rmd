@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is a toolbox for procssesing and analysing data from emotibit sensors. It will collate the physio data, re running heart rate analyses with heart py, if required. It will then associate the data with logs, obersational data, or output from a gorilla experiment, labelling the stimuli and attaching behavioural data. Finally, it contains tools for cross recurrence quantification analysis. It uses the eyethinkdata package, which will be installed if you don't have it.
+This is a toolbox for processing and analysing data from emotibit sensors. It will collate the physio data, re running heart rate analyses with heart py, if required. It will then associate the data with logs, obsersvational data, or output from a gorilla experiment, labeling the stimuli and attaching behavioural data. Finally, it contains tools for cross recurrence quantification analysis. It uses the eyethinkdata package, which will be installed if you don't have it.
 
 Here's how to get the latest version (always recommended as there's a fair bit of development going on)
 
@@ -141,26 +141,65 @@ The physio_merge function spits out the plot to check your data alignment, as be
 
 The main output of this function are the set of data.tables that give you the emotitbit measurements moment by moment (ed), the trial data (td) where those are summarized over trials, the participant data (pd) summarized over people and the stimuli data (sd) summarized over stimuli items.
 
-You can save out this data into separate .csv files with one command. It will put them in a folder called 'processed' by default, or you can specify a different name
+You can look at the tiemcourse by plotting data$ed: 
+
+```{r}
+ggplot(data=data$ed,aes(x=tt,y=norm,colour=item))+geom_smooth()
+```
+
+However, using geom_smooth() sometimes results in too much smoothing. As an alternative for plotting, physio_merge() also outputs data$dm, which has each dv averaged over all participants in 1 second time bins, with the metrics of raw and morn scores. This can be plotted with geom_line()
+
+```{r}
+ggplot(data=data$dm[metric=="norm" & edv=="EA"],aes(x=t,y=y,colour=item))+geom_line()+theme_bw()
+```
+
+The whole data list of different data types can be saved out into separate .csv files with one command. It will put them in a folder called 'processed' by default, or you can specify a different name
 
 ```{r}
 saveout_datalist(data)
 ```
 
-AVERAGE DATA OVER pids FOR PD in MERGE
-CHANGE THE SAVEOUT and READIN to use FREAD/WRITE
-
-
-If you are just interested in the behaviour and the physiological response of individuals, you can stop here. Or, in the next step, we use the ed data to calculate the physiological synchrony between these signals using cross recurrence analysis.
+If you are just interested in the behaviour and the physiological response of individuals, you can stop here. Or, in the next step, we take the ed data and calculate the physiological synchrony between these signals using cross recurrence analysis.
 
 ## Cross recurrence analysis
 
-### Quantifying trials/stimuli
+In this toolbox we use Dale and Coco's (21014) [CRQA methods paper and R toolbox](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2014.00510/full). This package adds a set of function that basically iterate the crqa() function over lots of trials and pairs of dyads. 
+Here we have run the crqa_trials() function over our data of 3 participants watching two trials. We've turned on options to draw the pairs of time series and the cross recurrence plots for each pair of heart rate time series.
 
-### Windowed analysis for timecourse
+```{r}
+   hr_crqa <-   crqa_trials(data=data,radius=.6,delay=2,embed=4,mindiagline=6,normalize=T,
+                            edvs= list("HR"),drawplot=T,plot_ts=T)
+```
+
+The function returns crqa stats on every pairwise comparison for every trial.
+
+```{r}
+hr_crqa
+```
+Typically, we also want these pairwise comparisons data aggregated over trials, conditions or stimuli items. There is a wrapper function crqq_full() that will do this step too. Also, above we specified various crqa parameters like embedding and delay. From lots of experiences, we have a set of standard values that we use by default. The crqq_full() function runs a set of specified analyses using these defaults and returns the full rqa table, and updates our data list with averages over trials, people and stimuli items. By default it will run crqas for HR, EA and a multidemensional HR.EA combination, and windowed analyses. But you can also specify a subste of these. Here I've just asked for EA and windowed EA which give us time course information, since those are the measures that we have found are the best indicators of engagement. 
+
+```{r}
+data <- crqa_full(data=data,analyses = c("EA","EAwin"))
+```
+
+That probably took a matter of seconds, since we only have 3 people watching 2 stimuli. But since pairwise comparisons are at the heart of crqa, you'll find that processing time increases rapidly with increasing participant numbers and stimuli lengths. We now have all the pairwise comparisons stored in data\$r, we have windowd timecourse data in data\$rw, the trial information in data\$td has been updated with summary stats for each participant's trial, and we have averages for each stimuli item in data\$sd. We can now visualise these. 
+
+### Visualising item and condition differences
+
+The means for the trial can be plotted like any other DV such as accuracy or reaction time using data$td. Of course, with only 2 trial and three people these differences are meanginless here. 
+
+```{r}
+pirateye(data$td,dv="DET_EA",x_condition = "item", violin=F)
+```
+
+You could also look for correlations between their DET scores and their explicit ratings in the trial data, or between the item mean DET scores in data\$sd and some external measure of engagement or success (such as sales figures, youtube likes, etc). 
 
 
 
+```{r}
+ggplot(data=data$dm[metric=="DET" & edv=="EA"],aes(x=t,y=y,colour=item))+geom_line()+theme_bw()
+
+```
 
 
 

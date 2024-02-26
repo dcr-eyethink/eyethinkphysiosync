@@ -14,41 +14,43 @@ physio_merge(
   pd = NULL,
   sd = NULL,
   ed = NULL,
-  dinfo = c("pid"),
+  condcols = c("category", "condition", "item", "stim"),
   normlevel = 1,
   pinfo = NULL,
   gd = NULL,
-  filter_prop_min = 0.5,
-  normvar = "filter",
-  normvalue = 1,
   baseline = FALSE,
   hour_adjust = 0,
-  trim_eda = T,
   stop_at_plotcheck = F,
-  plot_eda_outliers = F
+  eda_check = list(mean = 20, range_min = 0.01, low = 0.03, high = 25)
 )
 }
 \arguments{
-\item{td}{trial data, including eid, cond(s), starttime and stoptime}
+\item{processed_emotibit}{output from emotibit_process() or eomotibit_compile() if used}
 
-\item{ed}{physio data, post compile}
+\item{processed_gorilla}{output from gorilla_physio_presentation if used}
 
-\item{dinfo}{the cols in td that pick out unique trial. If single rec, just audience ID}
+\item{td}{trial data, including pid, eid, cond(s), starttime and stoptime, if you don't have (processed_gorilla)}
 
-\item{normlevel}{how many of those dinfo cols should be used to norm}
+\item{pd}{participant data, if you don't have (processed_gorilla)}
 
-\item{gd}{timecourse data that you also want labelled, optional wrapper for timecoursejoin_empatica}
+\item{sd}{stimuli data, if you don't have (processed_gorilla)}
 
-\item{normvar}{use the period when normvar=normvalue for normalising}
+\item{ed}{physio data, post compilation, if you don't have (processed_emotibit)}
 
-\item{normvalue}{the raw value of normvar that you want to include in normalising}
+\item{condcols}{the cols in td that pick out unique trial. If each person just saw the same single event, set to NULL}
 
-\item{baseline}{do you want to z score using sd (F default) or just baseline shift (T)}
+\item{normlevel}{defaults to 1 which is zscoring per person. Set to 2+ for each additional column of condcols to use}
+
+\item{pinfo}{name of a column in participant data that identifies a social group}
+
+\item{baseline}{not implemented yet. do you want to z score using sd (F default) or just baseline shift (T)}
 
 \item{hour_adjust}{nunmber of hours to shift physio data by, in case of GMT problem}
+
+\item{eda_check}{set to NULL if not wanted, otherwise a list of mean, range_min, lod and high thresholds for EDA filtering}
 }
 \value{
-labeled ed data and td with summary stats
+labeled ed, td, pd and sd data with summary stats
 }
 \description{
 Label physio data with trial info
