@@ -71,7 +71,7 @@ processed_emotibit_data$p_start
 You can achieve everything above in one function call, that just runs through the processes in turn:
 
 ```{r eval=F}
-processed_emotibit <- emotibit_process(datafolder = "raw_emotibit")
+processed_emotibit_data <- emotibit_process(datafolder = "raw_emotibit")
 ```
 
 ## Behavioural data
@@ -101,7 +101,7 @@ Typically, I use more than one column, so that I can include information to iden
 Many of the experiments run in the eyethink lab use a standardized task called snappily *AV block multiple stim types*. There are functions to automatically process data from the various versions of this task to generate summary data.
 
 ```{r}
-processed_gorilla <- gorilla_physio_presentation()
+processed_gorilla <- gorilla_physio_presentation(datafolder = "gorilla_data")
 ```
 
 There are 2 outputs here. pd is the participant data, and looks like this for our toy experiment
@@ -123,7 +123,7 @@ As well as the important trial start and stop times, we have the participants re
 The function that joins together the behavioural and emotibit data is called physio_merge(). It can take a while as there is a lot of processing. Before doing so, it's a good idea to run it with stop_at_plotcheck = T. This gives you a graphical representation of where you have emotibit and where you have gorilla data. Time is on the x axis, with days in different panels, and the different emotibit sensors are arrayed on the y axis. The emotibit sensor ids are read off from the SD cards for the emotibit data, and entered by the participant in the gorilla data. 
 
 ```{r}
-physio_merge(processed_emotibit ,processed_gorilla,stop_at_plotcheck = T )
+physio_merge(processed_emotibit_data ,processed_gorilla,stop_at_plotcheck = T )
 ```
 
 The black lines are where you have gorilla data (with the pids written nearby), and the red lines are the period for which you have physiological data. In a perfect world, all the red lines would appear over the black bars. But you may get times where the red lines don't fully cover the black areas, where the sensor battery gave out for example, or someone forgot to start recording. Another error that can occur is that the red lines will systematical be an hour off of the black bars in every case. This suggests that there has been some problem with the time zones. The emotibit chips don't handle British daylight savings very well. To correct for this, re run emotibit_compile() with hour_adjust = 1 or -1.
@@ -134,7 +134,7 @@ There's a function to handle those corrections quickly. You just give it a data.
 
 ```{r}
 processed_gorilla <- gorilla_eid_corrections(processed_gorilla, corrections=data.table(pid=c(10370290),eid=c("red4")))
-data <- physio_merge(processed_emotibit ,processed_gorilla)
+data <- physio_merge(processed_emotibit_data ,processed_gorilla)
 ```
 
 The physio_merge function spits out the plot to check your data alignment, as before, and also a plot of theeda data per person and emotibit sensor. There is a threshold (20 by default, shown as a line on the plot) such that if the mean EDA reading for someone is below that, we set filter=0 and they get excluded. Also we exclude people where the range of EDA values is small (default <0.03). In there cases that's either someone who is very sweaty or not at all sweaty, or a misplaced sensor. We also set filter=0 for individual measurements that are outside of thresholds (defaults <.01 & >25). In the trial data, td, we summarize how many measurements were excluded from each trial (you might want to throw out trials with less than a certain % of valid meaurements), and the average of those values for each person is reported as % in the plot. 
@@ -176,36 +176,57 @@ The function returns crqa stats on every pairwise comparison for every trial.
 ```{r}
 hr_crqa
 ```
-Typically, we also want these pairwise comparisons data aggregated over trials, conditions or stimuli items. There is a wrapper function crqq_full() that will do this step too. Also, above we specified various crqa parameters like embedding and delay. From lots of experiences, we have a set of standard values that we use by default. The crqq_full() function runs a set of specified analyses using these defaults and returns the full rqa table, and updates our data list with averages over trials, people and stimuli items. By default it will run crqas for HR, EA and a multidemensional HR.EA combination, and windowed analyses. But you can also specify a subste of these. Here I've just asked for EA and windowed EA which give us time course information, since those are the measures that we have found are the best indicators of engagement. 
+Typically, we also want these pairwise comparisons data aggregated over trials, conditions or stimuli items. There is a wrapper function crqq_full() that will do this step too. Also, above we specified various crqa parameters like embedding and delay. From lots of experiences, we have a set of standard values that we use by default. The crqq_full() function runs a set of specified analyses using these defaults and returns the full rqa table, and updates our data list with averages over trials, people and stimuli items. By default it will run crqas for HR, EA and a multidemensional HR.EA combination, and windowed analyses. But you can also specify a subset of these. Here I've just asked for EA and windowed EA which give us time course information, since those are the measures that we have found are the best indicators of engagement. 
 
 ```{r}
 data <- crqa_full(data=data,analyses = c("EA","EAwin"))
 ```
 
-That probably took a matter of seconds, since we only have 3 people watching 2 stimuli. But since pairwise comparisons are at the heart of crqa, you'll find that processing time increases rapidly with increasing participant numbers and stimuli lengths. We now have all the pairwise comparisons stored in data\$r, we have windowd timecourse data in data\$rw, the trial information in data\$td has been updated with summary stats for each participant's trial, and we have averages for each stimuli item in data\$sd. We can now visualise these. 
+That probably took a matter of seconds, since we only have 3 people watching 2 stimuli. But since pairwise comparisons are at the heart of crqa, you'll find that processing time increases rapidly with increasing participant numbers and stimuli lengths. We now have all the pairwise comparisons stored in data\$r, we have windowed timecourse data in data\$rw, the trial information in data\$td has been updated with summary stats for each participant's trial, and we have averages for each stimuli item in data\$sd. We can now visualise these. 
 
 ### Visualising item and condition differences
 
-The means for the trial can be plotted like any other DV such as accuracy or reaction time using data$td. Of course, with only 2 trial and three people these differences are meanginless here. 
+The means for the trial can be plotted like any other DV such as accuracy or reaction time using data$td. Of course, with only 2 trial and three people these differences are meaningless here. 
 
 ```{r}
 pirateye(data$td,dv="DET_EA",x_condition = "item", violin=F)
 ```
 
-You could also look for correlations between their DET scores and their explicit ratings in the trial data, or between the item mean DET scores in data\$sd and some external measure of engagement or success (such as sales figures, youtube likes, etc). 
+You could also look for correlations between their DET scores and their explicit ratings in the trial data, or between the item mean DET scores in data\$sd and some external measure of engagement or success (such as sales figures, youtube likes, etc). The exclorr() function in eyethinkdata package maybe of use here. 
 
+Also data$dm, the data table of time binned means, has been updated with the crqa metrics. You can use that that as above to plot time course
 
-
-```{r}
+```{r warning=FALSE}
 ggplot(data=data$dm[metric=="DET" & edv=="EA"],aes(x=t,y=y,colour=item))+geom_line()+theme_bw()
 
 ```
 
+There is also a built in plotter for timecourse data that will smooth the plot a little. You just specify the metric and the dv that you want. You can tell it what column to use to split the data in different lines. So to contrast the two items:
+
+```{r warning=FALSE}
+physio_timeplot(data,plotmetric="DET",plotdv = "EA",contrast="item")
+```
+
+Or you can select what data to show by passing a data.table to selection. This will be matched to all rows in the data 
+
+```{r warning=FALSE}
+timeplot <- physio_timeplot(data,plotmetric="DET",plotdv = "EA",selection = data.table(item="benz"))
+timeplot
+```
+
+You can also make a composite movie, with an animated version of the plots added to the stimulus movie. For this to work you need to have installed the packages gganimate and av into R, and also downloaded the application ffmpeg from https://ffmpeg.org. You can pass the plot that you have made with physio_timeplot(), as above, or just pass it the variables that physio_timeplot() needs and it'll make a new one. So the command below will animate the plot above and composite it with the benz.mp4 video. 
+
+```{r eval=FALSE}
+physio_movie(timeplot = timeplot,stimfile = "stim/benz.mp4")
+```
+Here's what that woudl look like if run:
+
+<img src="benz_spark.mp4" type="video/mp4"/>
 
 
+```{r}
 
-
-
+```
 
 
 
