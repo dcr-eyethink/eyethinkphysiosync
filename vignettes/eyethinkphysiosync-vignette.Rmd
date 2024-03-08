@@ -26,9 +26,7 @@ devtools::install_github("dcr-eyethink/eyethinkphysiosync")
 library(eyethinkphysiosync)
 ```
 
-There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process. 
-
-We will be processing data from a little experiment in which three participants watched 60 second advert and a 2 minute clip of a drama show.
+There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process. We will be processing data from a little experiment in which three participants watched 60 second advert and a 2 minute clip of a drama show.
 
 ## Processing raw emotibit data
 
@@ -219,14 +217,12 @@ You can also make a composite movie, with an animated version of the plots added
 ```{r eval=FALSE}
 physio_movie(timeplot = timeplot,stimfile = "stim/benz.mp4")
 ```
-Here's what that woudl look like if run:
+Here's what that would output if run:
 
-<img src="benz_spark.mp4" type="video/mp4"/>
+<video width="800" height="850" controls>
+  <source src="benz_spark.mp4" type="video/mp4">
+</video>
 
-
-```{r}
-
-```
 
 
 
