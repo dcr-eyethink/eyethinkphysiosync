@@ -1,4 +1,4 @@
-physio_movie <- function(timeplot=NULL,stimfile,outputfile=NULL,
+physio_movie <- function(timeplot=NULL,stimfile=NULL,outputfile=NULL,
                          fps=30,spwidth=800,spheight=400,...){
 
   #' Animates a physio_timeplot, scales and adds to stimulus video into a composite movie
@@ -15,10 +15,11 @@ physio_movie <- function(timeplot=NULL,stimfile,outputfile=NULL,
     timeplot <- do.call(physio_timeplot,...)
   }
 
+  if (!is.null(stimfile) ){
   if (!file.exists(stimfile)){
     rstudioapi::showDialog(message = "I can't find your stim file!","problem")
     stimfile <- NULL
-  }
+  }}
 
   if(is.null(stimfile)){
     rstudioapi::showDialog(message = "Select the stimulus video file that you want to compsite with the plot",title = "stim location?")
