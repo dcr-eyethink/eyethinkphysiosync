@@ -1,5 +1,5 @@
 ---
-title: "Data types and files from Eyethink PhysioSync toolbox"
+title: "data_output-vignette"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{data_output-vignette}

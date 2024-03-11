@@ -42,13 +42,13 @@ emotibit_session_folders(datafolder = "raw_emotibit",sensor_id = "eyethink")
 
 Now we need to use the emotibit data parser to generate different .csv files for each measurement. If the function can't find your emotibit data parser app, it will ask for the location. During this process, the app will pop up a window to inform you of its progress
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval=F}
 emotibit_parser(datafolder = "emotibit_data")
 ```
 
 Next we can reprocess the heart rate signal using heart py and the PG sensor data. This may not be necessary if/when the emotibit uses a better algorithm on its chip. 
 
-```{r}
+```{r eval=F}
 emotibit_heartpy(datafolder = "emotibit_data")
 ```
 
