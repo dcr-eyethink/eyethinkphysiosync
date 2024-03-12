@@ -128,11 +128,11 @@ If you are just interested in the behaviour and the physiological response of in
 ## Cross recurrence analysis
 
 In this toolbox we use Dale and Coco's (21014) [CRQA methods paper and R toolbox](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2014.00510/full). This package adds a set of function that basically iterate the crqa() function over lots of trials and pairs of dyads. 
-Here we have run the crqa_trials() function over our data of 3 participants watching two trials. We've turned on options to draw the pairs of time series and the cross recurrence plots for each pair of heart rate time series.
+Here we have run the crqa_trials() function over our data of 3 participants watching two trials. We've turned on option to draw the pairs of time series for each pair of heart rate time series.
 
 ```{r echo=F}
    hr_crqa <-   crqa_trials(data=data,radius=.6,delay=2,embed=4,mindiagline=6,normalize=T,
-                            edvs= list("HR"),drawplot=T,plot_ts=T)
+                            edvs= list("HR"),plot_ts=T)
 ```
 
 The function returns crqa stats on every pairwise comparison for every trial.
