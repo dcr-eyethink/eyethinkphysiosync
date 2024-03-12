@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">eyethinkphysiosync</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/data_output-vignette.html">Data types and files from Eyethink PhysioSync toolbox</a>
+    <a class="dropdown-item" href="../articles/data_output-vignette.html">data_output-vignette</a>
     <a class="dropdown-item" href="../articles/eyethinkphysiosync-vignette.html">eyethinkphysiosync-vignette</a>
   </div>
 </li>
@@ -78,10 +78,10 @@
 
     
     
-<p>This is a toolbox for procssesing and analysing data from emotibit
-sensors. It will collate the physio data, re running heart rate analyses
+<p>This is a toolbox for processing and analysing data from emotibit
+sensors. It will collate the physio data, re-running heart rate analyses
 with heart py, if required. It will then associate the data with logs,
-obersational data, or output from a gorilla experiment, labelling the
+observational data, or output from a gorilla experiment, labeling the
 stimuli and attaching behavioural data. Finally, it contains tools for
 cross recurrence quantification analysis. It uses the eyethinkdata
 package, which will be installed if you don’t have it.</p>
@@ -92,57 +92,411 @@ fair bit of development going on)</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dcr-eyethink/eyethinkphysiosync" class="external-link">eyethinkphysiosync</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: eyethinkdata</span></span>
-<span><span class="co">#&gt; Loading required package: data.table</span></span>
-<span><span class="co">#&gt; Loading required package: ggplot2</span></span></code></pre></div>
+<span><span class="co">#&gt; Loading required package: ggplot2</span></span>
+<span><span class="co">#&gt; Loading required package: data.table</span></span></code></pre></div>
 <p>There are three main stages to this process: processing the raw
 emotibit data, trimming and integrating the data with a record of
 participants’ experiences and behaviour, and then optionally running a
 cross recurrence analysis. In each case, there are single wrapper
 functions to achieve each of these in one command, but in this vignette
-I’ll walk through the steps to show you the process.</p>
-<div class="section level2">
-<h2 id="processing-raw-emotibit-data">Processing raw emotibit data<a class="anchor" aria-label="anchor" href="#processing-raw-emotibit-data"></a>
-</h2>
-<p>This</p>
+I’ll walk through the steps to show you the process. We will be
+processing data from a little experiment in which three participants
+watched 60 second advert and a 2 minute clip of a drama show.</p>
 <div class="section level3">
-<h3 id="emotibit-file-organisation-and-sensor-id">Emotibit file organisation and sensor ID<a class="anchor" aria-label="anchor" href="#emotibit-file-organisation-and-sensor-id"></a>
+<h3 id="emotibit-pre-processing">Emotibit pre-processing<a class="anchor" aria-label="anchor" href="#emotibit-pre-processing"></a>
 </h3>
-</div>
-<div class="section level3">
-<h3 id="compiling-and-processing-emotibit-data">Compiling and processing emotibit data<a class="anchor" aria-label="anchor" href="#compiling-and-processing-emotibit-data"></a>
-</h3>
-</div>
+<p>The pre-processes is detailed here (). It’s in a separate document
+because those processes require some additional software and python code
+to be installed. Assuming that you’ve done that step, or another lab
+member has done it for you, you can now compile all the data that’s been
+pre-processed. This function goes through all the emotibit data folders
+and compiles the data for the DVs that are named. It saves the data out
+to a file, emotibit_data_comb.csv, and returns it as a datatable</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">processed_emotibit_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/emotibit_compile.html">emotibit_compile</a></span><span class="op">(</span>edv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"HR"</span>,<span class="st">"EA"</span>,<span class="st">"ACC"</span><span class="op">)</span>,datafolder <span class="op">=</span> <span class="st">"emotibit_data"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Reading  blue8_2024-02-13_11-37-17    HR  EA  ACC</span></span>
+<span><span class="co">#&gt; Reading  green6_2024-02-13_11-32-54   HR  EA  ACC</span></span>
+<span><span class="co">#&gt; Reading  red4_2024-02-13_11-27-08     HR  EA  ACC</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="behavioural-data">Behavioural data<a class="anchor" aria-label="anchor" href="#behavioural-data"></a>
 </h2>
+<p>Now we can gather the behavioural data so we know what the
+participants were doing and seeing, and importantly, when. We want this
+trial data in the form of a data.table, typically called td, that has
+one row per person, per stimulus that they saw. This could be one of
+many 30 sec ads a person sees, or a 2 hour movie that each person sees
+once.</p>
 <div class="section level3">
 <h3 id="format-of-trial-data-and-participant-data">Format of trial data and participant data<a class="anchor" aria-label="anchor" href="#format-of-trial-data-and-participant-data"></a>
 </h3>
+<p>Here’s an example of the minimal information that we need in the
+trial data</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">fread</span><span class="op">(</span><span class="st">"eg_td.csv"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        pid     eid  starttime   stoptime category condition    item    stim</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;  &lt;char&gt;      &lt;int&gt;      &lt;int&gt;   &lt;char&gt;    &lt;char&gt;  &lt;char&gt;  &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1: 9848500 orange5 1701171020 1701171240 politics       Yes yes_vid Yes.mp4</span></span>
+<span><span class="co">#&gt; 2: 9848500 orange5 1701171269 1701171429 politics       Yes  no_vid  No.mp4</span></span>
+<span><span class="co">#&gt; 3: 9848771   blue4 1701173489 1701173709 politics       Yes yes_vid Yes.mp4</span></span>
+<span><span class="co">#&gt; 4: 9848771   blue4 1701173723 1701173883 politics       Yes  no_vid  No.mp4</span></span>
+<span><span class="co">#&gt; 5: 9848965  green6 1701175506 1701175726 politics        No yes_vid Yes.mp4</span></span>
+<span><span class="co">#&gt; 6: 9848965  green6 1701175747 1701175907 politics        No  no_vid  No.mp4</span></span></code></pre></div>
+<p>The first 4 columns here are required for the processes we will carry
+out below: <strong>pid</strong> the paritcipant ID <strong>eid</strong>
+the name of the sensor that the participant wore
+<strong>starttime</strong> The UTC time code (<a href="https://www.unixtimestamp.com" class="external-link uri">https://www.unixtimestamp.com</a>) when the stimulus started
+<strong>stoptime</strong> end time of the stimulus</p>
+<p>In addition you need one or more columns to pick out a unique trial
+or stimulus event (something that each participant only sees once). This
+could be the stimulus name, for example. Later we will be carrying out a
+cross recurrence analysis on all participants who experienced this same
+event, and this is how we will identify them.</p>
+<p>Typically, I use more than one column, so that I can include
+information to identify types of trial or conditions. By convention, I
+use category, condition, item and stim columns, as we see here. But
+whatever is there will be populated throughout the data we generate. You
+can also include here any behavioural information about response to the
+stimuli, such as rating ro memory tasks. This data can be entered by
+hand into a spreadsheet, or taken from a experiment log, or derived from
+gorilla data.</p>
 </div>
 <div class="section level3">
 <h3 id="processing-gorilla-standardised-task">Processing gorilla standardised task<a class="anchor" aria-label="anchor" href="#processing-gorilla-standardised-task"></a>
 </h3>
+<p>Many of the experiments run in the eyethink lab use a standardized
+task called snappily <em>AV block multiple stim types</em>. There are
+functions to automatically process data from the various versions of
+this task to generate summary data.</p>
+<p>There are 2 outputs here. pd is the participant data, and looks like
+this for our toy experiment</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">processed_gorilla</span><span class="op">$</span><span class="va">pd</span></span>
+<span><span class="co">#&gt; Key: &lt;pid&gt;</span></span>
+<span><span class="co">#&gt;         pid     eid        exp_begin exp_ver             exp_end   age    sex</span></span>
+<span><span class="co">#&gt;      &lt;fctr&gt;  &lt;fctr&gt;           &lt;char&gt;   &lt;int&gt;              &lt;char&gt; &lt;num&gt; &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1: 10370290 orange4 13/02/2024 11:27       3 13/02/2024 11:31:27    48   male</span></span>
+<span><span class="co">#&gt; 2: 10370446  green6 13/02/2024 11:32       3 13/02/2024 11:36:37    46 female</span></span>
+<span><span class="co">#&gt; 3: 10370528   blue8 13/02/2024 11:37       3 13/02/2024 11:41:26    50   male</span></span></code></pre></div>
+<p>And the trial data</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">processed_gorilla</span><span class="op">$</span><span class="va">td</span></span>
+<span><span class="co">#&gt; Key: &lt;pid, stim, condition, category, item&gt;</span></span>
+<span><span class="co">#&gt;         pid     eid        exp_begin exp_ver             exp_end   age    sex</span></span>
+<span><span class="co">#&gt;      &lt;fctr&gt;  &lt;fctr&gt;           &lt;char&gt;   &lt;int&gt;              &lt;char&gt; &lt;num&gt; &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1: 10370290 orange4 13/02/2024 11:27       3 13/02/2024 11:31:27    48   male</span></span>
+<span><span class="co">#&gt; 2: 10370290 orange4 13/02/2024 11:27       3 13/02/2024 11:31:27    48   male</span></span>
+<span><span class="co">#&gt; 3: 10370446  green6 13/02/2024 11:32       3 13/02/2024 11:36:37    46 female</span></span>
+<span><span class="co">#&gt; 4: 10370446  green6 13/02/2024 11:32       3 13/02/2024 11:36:37    46 female</span></span>
+<span><span class="co">#&gt; 5: 10370528   blue8 13/02/2024 11:37       3 13/02/2024 11:41:26    50   male</span></span>
+<span><span class="co">#&gt; 6: 10370528   blue8 13/02/2024 11:37       3 13/02/2024 11:41:26    50   male</span></span>
+<span><span class="co">#&gt;           stim condition        category   item start_time  stop_time watched</span></span>
+<span><span class="co">#&gt;         &lt;fctr&gt;    &lt;fctr&gt;          &lt;fctr&gt; &lt;fctr&gt;      &lt;num&gt;      &lt;num&gt;   &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1: LATE_MB.mp4       end narrative_order   benz 1707823683 1707823742 58.7429</span></span>
+<span><span class="co">#&gt; 2:   pizza.mp4       man         cluster  pizza 1707823778 1707823873 94.2234</span></span>
+<span><span class="co">#&gt; 3: LATE_MB.mp4       end narrative_order   benz 1707823998 1707824057 58.7333</span></span>
+<span><span class="co">#&gt; 4:   pizza.mp4       man         cluster  pizza 1707824092 1707824186 94.2228</span></span>
+<span><span class="co">#&gt; 5: LATE_MB.mp4       end narrative_order   benz 1707824276 1707824340 63.9060</span></span>
+<span><span class="co">#&gt; 6:   pizza.mp4       man         cluster  pizza 1707824380 1707824474 94.4520</span></span>
+<span><span class="co">#&gt;    cluster.empathy.empathyslider1 cluster.empathy.empathyslider2</span></span>
+<span><span class="co">#&gt;                             &lt;num&gt;                          &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:                             NA                             NA</span></span>
+<span><span class="co">#&gt; 2:                             31                             66</span></span>
+<span><span class="co">#&gt; 3:                             NA                             NA</span></span>
+<span><span class="co">#&gt; 4:                             78                             26</span></span>
+<span><span class="co">#&gt; 5:                             NA                             NA</span></span>
+<span><span class="co">#&gt; 6:                             15                             85</span></span>
+<span><span class="co">#&gt;    cluster.empathy.rightslider cluster.familiarity.slider1</span></span>
+<span><span class="co">#&gt;                          &lt;num&gt;                       &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:                          NA                          NA</span></span>
+<span><span class="co">#&gt; 2:                          80                          12</span></span>
+<span><span class="co">#&gt; 3:                          NA                          NA</span></span>
+<span><span class="co">#&gt; 4:                          25                          75</span></span>
+<span><span class="co">#&gt; 5:                          NA                          NA</span></span>
+<span><span class="co">#&gt; 6:                          75                          25</span></span>
+<span><span class="co">#&gt;    cluster.familiarity.slider2 narrative.familiarity.scenefam</span></span>
+<span><span class="co">#&gt;                          &lt;num&gt;                          &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:                          NA                              0</span></span>
+<span><span class="co">#&gt; 2:                          51                             NA</span></span>
+<span><span class="co">#&gt; 3:                          NA                              1</span></span>
+<span><span class="co">#&gt; 4:                          63                             NA</span></span>
+<span><span class="co">#&gt; 5:                          NA                              0</span></span>
+<span><span class="co">#&gt; 6:                          41                             NA</span></span>
+<span><span class="co">#&gt;    narrative.familiarity.showfam narrative.likeability.emotion</span></span>
+<span><span class="co">#&gt;                            &lt;num&gt;                         &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:                            61                            35</span></span>
+<span><span class="co">#&gt; 2:                            NA                            NA</span></span>
+<span><span class="co">#&gt; 3:                            75                            67</span></span>
+<span><span class="co">#&gt; 4:                            NA                            NA</span></span>
+<span><span class="co">#&gt; 5:                            75                            29</span></span>
+<span><span class="co">#&gt; 6:                            NA                            NA</span></span>
+<span><span class="co">#&gt;    narrative.likeability.like narrative.likeability.shop</span></span>
+<span><span class="co">#&gt;                         &lt;num&gt;                      &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:                         39                         35</span></span>
+<span><span class="co">#&gt; 2:                         NA                         NA</span></span>
+<span><span class="co">#&gt; 3:                         69                         52</span></span>
+<span><span class="co">#&gt; 4:                         NA                         NA</span></span>
+<span><span class="co">#&gt; 5:                         43                         26</span></span>
+<span><span class="co">#&gt; 6:                         NA                         NA</span></span></code></pre></div>
+<p>As well as the important trial start and stop times, we have the
+participants responses on the various rating tasks after each stimuli.
+We can now match up this trial information with the physiological
+data</p>
 </div>
 <div class="section level3">
 <h3 id="linking-physio-and-behavioural">Linking physio and behavioural<a class="anchor" aria-label="anchor" href="#linking-physio-and-behavioural"></a>
 </h3>
-</div>
-<div class="section level3">
-<h3 id="filtering-physio">Filtering physio<a class="anchor" aria-label="anchor" href="#filtering-physio"></a>
-</h3>
+<p>The function that joins together the behavioural and emotibit data is
+called physio_merge(). It can take a while as there is a lot of
+processing. Before doing so, it’s a good idea to run it with
+stop_at_plotcheck = T. This gives you a graphical representation of
+where you have emotibit and where you have gorilla data. Time is on the
+x axis, with days in different panels, and the different emotibit
+sensors are arrayed on the y axis. The emotibit sensor ids are read off
+from the SD cards for the emotibit data, and entered by the participant
+in the gorilla data.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/physio_merge.html">physio_merge</a></span><span class="op">(</span><span class="va">processed_emotibit_data</span> ,<span class="va">processed_gorilla</span>,stop_at_plotcheck <span class="op">=</span> <span class="cn">T</span> <span class="op">)</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-8-1.png" width="90%"></p>
+<p>The black lines are where you have gorilla data (with the pids
+written nearby), and the red lines are the period for which you have
+physiological data. In a perfect world, all the red lines would appear
+over the black bars. But you may get times where the red lines don’t
+fully cover the black areas, where the sensor battery gave out for
+example, or someone forgot to start recording. Another error that can
+occur is that the red lines will systematical be an hour off of the
+black bars in every case. This suggests that there has been some problem
+with the time zones. The emotibit chips don’t handle British daylight
+savings very well. To correct for this, re run emotibit_compile() with
+hour_adjust = 1 or -1.</p>
+<p>A further thing is look out for are times in which you have a black
+bar and a red line at the same time, but they aren’t in top of each
+other. That has occurred at the top of this plot above. A reasonable
+explanation is that the participant has entered the eid incorrectly.
+Here they appear to have mistake the red case for an orange (to be fair,
+it is an orangey-red). Other typical mistakes are putting a 9 for a 6,
+for example. It’s a good idea to confirm these errors by looking in the
+experiment log, where they experimenter should have noted the eid as
+well as a back up.</p>
+<p>There’s a function to handle those corrections quickly. You just give
+it a data.table of pids and their correct eids, and it will go through
+your pd, td and any other data passed in a list to make correction. Then
+we can rerun the merging process and store it.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">processed_gorilla</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gorilla_eid_corrections.html">gorilla_eid_corrections</a></span><span class="op">(</span><span class="va">processed_gorilla</span>, corrections<span class="op">=</span><span class="fu">data.table</span><span class="op">(</span>pid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10370290</span><span class="op">)</span>,eid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red4"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; These cols were repeated in datatable 2 and used to replace earlier ones</span></span>
+<span><span class="co">#&gt; [1] "eid"</span></span>
+<span><span class="co">#&gt; These cols were repeated in datatable 2 and used to replace earlier ones</span></span>
+<span><span class="co">#&gt; [1] "eid"</span></span>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/physio_merge.html">physio_merge</a></span><span class="op">(</span><span class="va">processed_emotibit_data</span> ,<span class="va">processed_gorilla</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |============                                                          |  17%  |                                                                              |=======================                                               |  33%  |                                                                              |===================================                                   |  50%  |                                                                              |===============================================                       |  67%  |                                                                              |==========================================================            |  83%  |                                                                              |======================================================================| 100%</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-9-1.png" width="90%"><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-9-2.png" width="90%"></p>
+<p>The physio_merge function spits out the plot to check your data
+alignment, as before, and also a plot of the eda data per person and
+emotibit sensor. There is a threshold (20 by default, shown as a line on
+the plot) such that if the mean EDA reading for someone is below that,
+we set filter=0 and they get excluded. Also we exclude people where the
+range of EDA values is small (default &lt;0.03). In there cases that’s
+either someone who is very sweaty or not at all sweaty, or a misplaced
+sensor. We also set filter=0 for individual measurements that are
+outside of thresholds (defaults &lt;.01 &amp; &gt;25). In the trial
+data, td, we summarize how many measurements were excluded from each
+trial (you might want to throw out trials with less than a certain % of
+valid meaurements), and the average of those values for each person is
+reported as % in the plot.</p>
+<p>The main output of this function are the set of data.tables that give
+you the emotitbit measurements moment by moment (ed), the trial data
+(td) where those are summarized over trials, the participant data (pd)
+summarized over people and the stimuli data (sd) summarized over stimuli
+items.</p>
+<p>You can look at the tiemcourse by plotting data$ed:</p>
+<pre><code><span><span class="co">#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-10-1.png" width="90%"></p>
+<p>However, using geom_smooth() sometimes results in too much smoothing.
+As an alternative for plotting, physio_merge() also outputs data$dm,
+which has each dv averaged over all participants in 1 second time bins,
+with the metrics of raw and morn scores. This can be plotted with
+geom_line()</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span>data<span class="op">=</span><span class="va">data</span><span class="op">$</span><span class="va">dm</span><span class="op">[</span><span class="va">metric</span><span class="op">==</span><span class="st">"norm"</span> <span class="op">&amp;</span> <span class="va">edv</span><span class="op">==</span><span class="st">"EA"</span><span class="op">]</span>,<span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">t</span>,y<span class="op">=</span><span class="va">y</span>,colour<span class="op">=</span><span class="va">item</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-11-1.png" width="90%"></p>
+<p>The whole data list of different data types can be saved out into
+separate .csv files with one command. It will put them in a folder
+called ‘processed’ by default, or you can specify a different name</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://dcr-eyethink.github.io/eyethinkdata/reference/saveout_datalist.html" class="external-link">saveout_datalist</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ed  saved</span></span>
+<span><span class="co">#&gt; dm  saved</span></span>
+<span><span class="co">#&gt; td  saved</span></span>
+<span><span class="co">#&gt; pd  saved</span></span>
+<span><span class="co">#&gt; sd  saved</span></span></code></pre></div>
+<p>If you are just interested in the behaviour and the physiological
+response of individuals, you can stop here. Or, in the next step, we
+take the ed data and calculate the physiological synchrony between these
+signals using cross recurrence analysis.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="cross-recurrence-analysis">Cross recurrence analysis<a class="anchor" aria-label="anchor" href="#cross-recurrence-analysis"></a>
 </h2>
+<p>In this toolbox we use Dale and Coco’s (21014) <a href="https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2014.00510/full" class="external-link">CRQA
+methods paper and R toolbox</a>. This package adds a set of function
+that basically iterate the crqa() function over lots of trials and pairs
+of dyads. Here we have run the crqa_trials() function over our data of 3
+participants watching two trials. We’ve turned on option to draw the
+pairs of time series for each pair of heart rate time series.</p>
+<pre><code><span><span class="co">#&gt; HR  item:  narrative_order§end§benz§LATE_MB.mp4   progress 50 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%</span></span>
+<span><span class="co">#&gt; Warning: no DISPLAY variable so Tk is not available</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-1.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt;   |                                                                              |===============================================                       |  67%</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-2.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt;   |                                                                              |======================================================================| 100%</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-3.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; HR  item:  cluster§man§pizza§pizza.mp4   progress 100 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-4.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt;   |                                                                              |===============================================                       |  67%</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-5.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt;   |                                                                              |======================================================================| 100%</span></span></code></pre>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-6.png" width="90%"></p>
+<pre><code><span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; That took me</span></span>
+<span><span class="co">#&gt;       user     system    elapsed </span></span>
+<span><span class="co">#&gt; 0.01631667 0.00040000 0.01666667</span></span></code></pre>
+<p>The function returns crqa stats on every pairwise comparison for
+every trial.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hr_crqa</span></span>
+<span><span class="co">#&gt;           category condition   item        stim    edv</span></span>
+<span><span class="co">#&gt;             &lt;char&gt;    &lt;char&gt; &lt;char&gt;      &lt;char&gt; &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1: narrative_order       end   benz LATE_MB.mp4     HR</span></span>
+<span><span class="co">#&gt; 2: narrative_order       end   benz LATE_MB.mp4     HR</span></span>
+<span><span class="co">#&gt; 3: narrative_order       end   benz LATE_MB.mp4     HR</span></span>
+<span><span class="co">#&gt; 4:         cluster       man  pizza   pizza.mp4     HR</span></span>
+<span><span class="co">#&gt; 5:         cluster       man  pizza   pizza.mp4     HR</span></span>
+<span><span class="co">#&gt; 6:         cluster       man  pizza   pizza.mp4     HR</span></span>
+<span><span class="co">#&gt;                                     gid  dyad     pid1     pid2       RR</span></span>
+<span><span class="co">#&gt;                                  &lt;fctr&gt; &lt;int&gt;   &lt;char&gt;   &lt;char&gt;    &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1: narrative_order§end§benz§LATE_MB.mp4     1 10370290 10370446 21.44970</span></span>
+<span><span class="co">#&gt; 2: narrative_order§end§benz§LATE_MB.mp4     2 10370290 10370528 23.74260</span></span>
+<span><span class="co">#&gt; 3: narrative_order§end§benz§LATE_MB.mp4     3 10370446 10370528 21.81953</span></span>
+<span><span class="co">#&gt; 4:          cluster§man§pizza§pizza.mp4     1 10370290 10370446 19.81768</span></span>
+<span><span class="co">#&gt; 5:          cluster§man§pizza§pizza.mp4     2 10370290 10370528 21.27097</span></span>
+<span><span class="co">#&gt; 6:          cluster§man§pizza§pizza.mp4     3 10370446 10370528 16.03911</span></span>
+<span><span class="co">#&gt;         DET NRLINE  maxL         L     ENTR     rENTR      LAM       TT  catH</span></span>
+<span><span class="co">#&gt;       &lt;num&gt;  &lt;num&gt; &lt;num&gt;     &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt;    &lt;num&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1: 63.44828     33    20 11.151515 2.282987 0.9187414 87.41379 7.242857    NA</span></span>
+<span><span class="co">#&gt; 2: 73.36449     49    24  9.612245 2.018567 0.8123311 97.19626 6.709677    NA</span></span>
+<span><span class="co">#&gt; 3: 55.25424     30    18 10.866667 2.118279 0.9199570 98.64407 6.000000    NA</span></span>
+<span><span class="co">#&gt; 4: 52.46667     92    16  8.554348 2.042916 0.8519621 89.66667 4.769504    NA</span></span>
+<span><span class="co">#&gt; 5: 70.99379    108    27 10.583333 2.551037 0.8379103 95.21739 5.656827    NA</span></span>
+<span><span class="co">#&gt; 6: 46.78748     61    21  9.311475 2.248248 0.8765273 94.06919 4.680328    NA</span></span>
+<span><span class="co">#&gt;                                             tid1</span></span>
+<span><span class="co">#&gt;                                           &lt;fctr&gt;</span></span>
+<span><span class="co">#&gt; 1: 10370290-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 2: 10370290-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 3: 10370446-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 4:          10370290-cluster-man-pizza-pizza.mp4</span></span>
+<span><span class="co">#&gt; 5:          10370290-cluster-man-pizza-pizza.mp4</span></span>
+<span><span class="co">#&gt; 6:          10370446-cluster-man-pizza-pizza.mp4</span></span>
+<span><span class="co">#&gt;                                             tid2</span></span>
+<span><span class="co">#&gt;                                           &lt;fctr&gt;</span></span>
+<span><span class="co">#&gt; 1: 10370446-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 2: 10370528-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 3: 10370528-narrative_order-end-benz-LATE_MB.mp4</span></span>
+<span><span class="co">#&gt; 4:          10370446-cluster-man-pizza-pizza.mp4</span></span>
+<span><span class="co">#&gt; 5:          10370528-cluster-man-pizza-pizza.mp4</span></span>
+<span><span class="co">#&gt; 6:          10370528-cluster-man-pizza-pizza.mp4</span></span></code></pre></div>
+<p>Typically, we also want these pairwise comparisons data aggregated
+over trials, conditions or stimuli items. There is a wrapper function
+crqq_full() that will do this step too. Also, above we specified various
+crqa parameters like embedding and delay. From lots of experiences, we
+have a set of standard values that we use by default. The crqq_full()
+function runs a set of specified analyses using these defaults and
+returns the full rqa table, and updates our data list with averages over
+trials, people and stimuli items. By default it will run crqas for HR,
+EA and a multidemensional HR.EA combination, and windowed analyses. But
+you can also specify a subset of these. Here I’ve just asked for EA and
+windowed EA which give us time course information, since those are the
+measures that we have found are the best indicators of engagement.</p>
+<pre><code><span><span class="co">#&gt; EA  item:  narrative_order§benz§LATE_MB.mp4§end   progress 50 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
+<span><span class="co">#&gt; EA  item:  cluster§pizza§pizza.mp4§man   progress 100 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
+<span><span class="co">#&gt; That took me</span></span>
+<span><span class="co">#&gt;    user  system elapsed </span></span>
+<span><span class="co">#&gt; 0.00175 0.00000 0.00145 </span></span>
+<span><span class="co">#&gt; Proportions where we have no RR data</span></span>
+<span><span class="co">#&gt;       edv    V1</span></span>
+<span><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:     EA     0</span></span>
+<span><span class="co">#&gt; Proportions where we have no DET data</span></span>
+<span><span class="co">#&gt;       edv    V1</span></span>
+<span><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:     EA     0</span></span>
+<span><span class="co">#&gt; EA  item:  narrative_order§benz§LATE_MB.mp4§end   progress 50 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
+<span><span class="co">#&gt; EA  item:  cluster§pizza§pizza.mp4§man   progress 100 %</span></span>
+<span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
+<span><span class="co">#&gt; That took me</span></span>
+<span><span class="co">#&gt;         user       system      elapsed </span></span>
+<span><span class="co">#&gt; 1.893333e-02 6.666667e-05 1.758333e-02</span></span></code></pre>
+<p>That probably took a matter of seconds, since we only have 3 people
+watching 2 stimuli. But since pairwise comparisons are at the heart of
+crqa, you’ll find that processing time increases rapidly with increasing
+participant numbers and stimuli lengths. We now have all the pairwise
+comparisons stored in data$r, we have windowed timecourse data in
+data$rw, the trial information in data$td has been updated with summary
+stats for each participant’s trial, and we have averages for each
+stimuli item in data$sd. We can now visualise these.</p>
 <div class="section level3">
-<h3 id="quantifying-trialsstimuli">Quantifying trials/stimuli<a class="anchor" aria-label="anchor" href="#quantifying-trialsstimuli"></a>
+<h3 id="visualising-item-and-condition-differences">Visualising item and condition differences<a class="anchor" aria-label="anchor" href="#visualising-item-and-condition-differences"></a>
 </h3>
-</div>
-<div class="section level3">
-<h3 id="windowed-analysis-for-timecourse">Windowed analysis for timecourse<a class="anchor" aria-label="anchor" href="#windowed-analysis-for-timecourse"></a>
-</h3>
+<p>The means for the trial can be plotted like any other DV such as
+accuracy or reaction time using data$td. Of course, with only 2 trial
+and three people these differences are meaningless here.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://dcr-eyethink.github.io/eyethinkdata/reference/pirateye.html" class="external-link">pirateye</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">td</span>,dv<span class="op">=</span><span class="st">"DET_EA"</span>,x_condition <span class="op">=</span> <span class="st">"item"</span>, violin<span class="op">=</span><span class="cn">F</span><span class="op">)</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-16-1.png" width="90%"></p>
+<p>You could also look for correlations between their DET scores and
+their explicit ratings in the trial data, or between the item mean DET
+scores in data$sd and some external measure of engagement or success
+(such as sales figures, youtube likes, etc). The exclorr() function in
+eyethinkdata package maybe of use here.</p>
+<p>Also data$dm, the data table of time binned means, has been updated
+with the crqa metrics. You can use that that as above to plot time
+course</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span>data<span class="op">=</span><span class="va">data</span><span class="op">$</span><span class="va">dm</span><span class="op">[</span><span class="va">metric</span><span class="op">==</span><span class="st">"DET"</span> <span class="op">&amp;</span> <span class="va">edv</span><span class="op">==</span><span class="st">"EA"</span><span class="op">]</span>,<span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">t</span>,y<span class="op">=</span><span class="va">y</span>,colour<span class="op">=</span><span class="va">item</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-17-1.png" width="90%"></p>
+<p>There is also a built in plotter for timecourse data that will smooth
+the plot a little. You just specify the metric and the dv that you want.
+You can tell it what column to use to split the data in different lines.
+So to contrast the two items:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/physio_timeplot.html">physio_timeplot</a></span><span class="op">(</span><span class="va">data</span>,plotmetric<span class="op">=</span><span class="st">"DET"</span>,plotdv <span class="op">=</span> <span class="st">"EA"</span>,contrast<span class="op">=</span><span class="st">"item"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-18-1.png" width="90%"></p>
+<p>Or you can select what data to show by passing a data.table to
+selection. This will be matched to all rows in the data</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">timeplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/physio_timeplot.html">physio_timeplot</a></span><span class="op">(</span><span class="va">data</span>,plotmetric<span class="op">=</span><span class="st">"DET"</span>,plotdv <span class="op">=</span> <span class="st">"EA"</span>,selection <span class="op">=</span> <span class="fu">data.table</span><span class="op">(</span>item<span class="op">=</span><span class="st">"benz"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">timeplot</span></span></code></pre></div>
+<p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-19-1.png" width="90%"></p>
+<p>You can also make a composite movie, with an animated version of the
+plots added to the stimulus movie. For this to work you need to have
+installed the packages gganimate and av into R, and also downloaded the
+application ffmpeg from <a href="https://ffmpeg.org" class="external-link uri">https://ffmpeg.org</a>. You can pass the plot that you have
+made with physio_timeplot(), as above, or just pass it the variables
+that physio_timeplot() needs and it’ll make a new one. So the command
+below will animate the plot above and composite it with the benz.mp4
+video.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/physio_movie.html">physio_movie</a></span><span class="op">(</span>timeplot <span class="op">=</span> <span class="va">timeplot</span>,stimfile <span class="op">=</span> <span class="st">"stim/benz.mp4"</span><span class="op">)</span></span></code></pre></div>
+<p>Here’s what that would output if run:</p>
+<video width="600" controls><source src="benz_spark.mp4" type="video/mp4"></source></video>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

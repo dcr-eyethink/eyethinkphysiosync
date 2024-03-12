@@ -1,10 +1,10 @@
-pandoc: 2.19.2
+pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   data_output-vignette: data_output-vignette.html
   eyethinkphysiosync-vignette: eyethinkphysiosync-vignette.html
-last_built: 2024-02-03T13:09Z
+last_built: 2024-03-12T12:25Z
 urls:
   reference: https://dcr-eyethink.github.io/eyethinkphysiosync/reference
   article: https://dcr-eyethink.github.io/eyethinkphysiosync/articles

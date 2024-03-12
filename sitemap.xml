@@ -19,9 +19,60 @@
     <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/index.html</loc>
   </url>
   <url>
-    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/hello.html</loc>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/crqa_dyads.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/crqa_full.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/crqa_means.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/crqa_trials.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_compile.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_getsessionfolders.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_heartpy.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_parser.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_process.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_session_folders.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/eyethinkphysiosync-package.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/gorilla_eid_corrections.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/gorilla_emotibit_eid.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/gorilla_physio_presentation.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/gorilla_physio_test.html</loc>
   </url>
   <url>
     <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/physio_merge.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/physio_movie.html</loc>
+  </url>
+  <url>
+    <loc>https://dcr-eyethink.github.io/eyethinkphysiosync/reference/physio_timeplot.html</loc>
   </url>
 </urlset>
