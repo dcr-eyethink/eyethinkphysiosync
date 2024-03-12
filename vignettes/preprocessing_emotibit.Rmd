@@ -1,0 +1,74 @@
+---
+title: "Preprocessing Emotibit"
+author: "dcr"
+date: "2024-03-12"
+output: 
+  md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(eyethinkphysiosync)
+```
+
+This document walks through the pre-processing stage that begins with raw emotibit data, and ends with data that is organized, processed for heart rate and acceleration, and imported. This is the first stage in using the tools of the [eyethinkphysiosync package](https://dcr-eyethink.github.io/eyethinkphysiosync/). The functions run in R, but run a couple of external apps and bits of python code, which is why these processes are not in the [main package vignette](https://dcr-eyethink.github.io/eyethinkphysiosync/articles/eyethinkphysiosync_vignette.html).Firstly, you will need the eyethinkphysiosync package of course. Here's how to get the latest version from github
+
+```{r eval=FALSE}
+devtools::install_github("dcr-eyethink/eyethinkphysiosync")
+```
+
+Second, you need the [emotibit software](https://github.com/EmotiBit/EmotiBit_Docs/blob/master/Getting_Started.md#Installing-EmotiBit-Software) to parse the raw data. Thirdly, optionally, you can use [heartpy](https://python-heart-rate-analysis-toolkit.readthedocs.io/en/latest/) to reprocess the heart rate data, which seems to give a more relaible result than the heart rate processor on the emotibit chip (at least, for now). See the manual entry for emotitbit_heartpy for [installation instructions](https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotitbit_heartpy.html).
+
+## Processing raw emotibit data
+
+To harvest the data from emotbits, look on the sensor SD card for all files created during the experiment period (the dates are encoded in filenames). Copy all the files (.csv and .json) from the SD cards into one data folder on computer. 
+
+### Compiling and processing emotibit data
+
+The first step in processing the data is to place the files into folders that are named after the sensors. This can be the serial number that pops up on the osciloscope, or we can translate that code into a sensor name. By default, the function uses the sensor names from the eyethink lab, but a different .csv filename can be supplied. The .csv file should have a column called eid (the codename you want for your sensor), and one called serialid (the ID code from the emotibit chip). The function will also default to duplicating the datafolder (to 'emotibit_data' in working directory), but you can set that with destination=.... If you want to overwrite/reorganize the original folder, set destination = NULL.
+
+```{r}
+emotibit_session_folders(datafolder = "raw_emotibit",sensor_id = "eyethink",overwrite = T)
+```
+
+Now we need to use the emotibit data parser to generate different .csv files for each measurement. If the function can't find your emotibit data parser app (see above for installation instructions), it will ask for the location. During this process, the app will pop up a window to inform you of its progress
+
+```{r }
+emotibit_parser(datafolder = "emotibit_data")
+```
+
+Next we can reprocess the heart rate signal using heart py and the PG sensor data. This may not be necessary if/when the emotibit uses a better algorithm on its chip. You'll need to install heartpy in a particular location on your system - see the [function help](https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotitbit_heartpy.html) for how to install, then tell the function where it is with heartpy_location=.
+
+```{r }
+emotibit_heartpy(datafolder = "emotibit_data")
+```
+
+Finally, we need to compile all the data for the measurements that we care about. This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable named ed
+
+```{r}
+processed_emotibit_data <- emotibit_compile(edv = c("HR","EA","ACC"),datafolder = "emotibit_data")
+```
+
+It also returns various import checks and plots of the data. For example, below we show a histogram of the start times for the three sessions. Not very interesting in this example, of course
+
+```{r}
+processed_emotibit_data$p_start
+```
+
+### Wrapper function
+
+You can achieve everything above in one function call, that just runs through the processes in turn:
+
+```{r eval=F}
+processed_emotibit_data <- emotibit_process(datafolder = "raw_emotibit")
+```
+
+## Analysing data
+
+You can now link the data to behaivoural data from a log file or gorilla experiment, and start to analyse. All these tools are detailed in the main package vignette
+
+``` {r eval=F}
+vignette("eyethinkphysiosync_vignette",package = "eyethinkphysiosync")
+```
+
+You can also read this vignette [online at the github website](https://dcr-eyethink.github.io/eyethinkphysiosync/articles/eyethinkphysiosync_vignette.html).

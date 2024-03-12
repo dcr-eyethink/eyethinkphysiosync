@@ -6,7 +6,7 @@
 \usage{
 physio_movie(
   timeplot = NULL,
-  stimfile,
+  stimfile = NULL,
   outputfile = NULL,
   fps = 30,
   spwidth = 800,

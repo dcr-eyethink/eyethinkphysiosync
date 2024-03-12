@@ -10,11 +10,14 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  out.width = "90%",
+  fig.width = 6, 
+  fig.height = 4,
   comment = "#>"
 )
 ```
 
-This is a toolbox for processing and analysing data from emotibit sensors. It will collate the physio data, re running heart rate analyses with heart py, if required. It will then associate the data with logs, obsersvational data, or output from a gorilla experiment, labeling the stimuli and attaching behavioural data. Finally, it contains tools for cross recurrence quantification analysis. It uses the eyethinkdata package, which will be installed if you don't have it.
+This is a toolbox for processing and analysing data from emotibit sensors. It will collate the physio data, re-running heart rate analyses with heart py, if required. It will then associate the data with logs, observational data, or output from a gorilla experiment, labeling the stimuli and attaching behavioural data. Finally, it contains tools for cross recurrence quantification analysis. It uses the eyethinkdata package, which will be installed if you don't have it.
 
 Here's how to get the latest version (always recommended as there's a fair bit of development going on)
 
@@ -28,50 +31,13 @@ library(eyethinkphysiosync)
 
 There are three main stages to this process: processing the raw emotibit data, trimming and integrating the data with a record of participants' experiences and behaviour, and then optionally running a cross recurrence analysis. In each case, there are single wrapper functions to achieve each of these in one command, but in this vignette I'll walk through the steps to show you the process. We will be processing data from a little experiment in which three participants watched 60 second advert and a 2 minute clip of a drama show.
 
-## Processing raw emotibit data
+### Emotibit pre-processing
 
-To harvest the data from emotbits, look on the sensor SD card for all files created during the experiment period (the dates are encoded in filenames). Copy all the files (.csv and .json) from the SD cards into one data folder on computer. 
-
-### Compiling and processing emotibit data
-
-The first step in processing the data is to place the files into folders that are named after the sensors. This can be the serial number that pops up on the osciloscope, or we can translate that code into a sensor name. By default, the function uses the sensor names from the eyethink lab, but a differnt .csv filename can be supplied. It will also default to duplicating the datafolder (to emotibit_data in working directory), but if you want to overwrite/reorganize the original folder, set destination = NULL.
-
-```{r}
-emotibit_session_folders(datafolder = "raw_emotibit",sensor_id = "eyethink")
-```
-
-Now we need to use the emotibit data parser to generate different .csv files for each measurement. If the function can't find your emotibit data parser app, it will ask for the location. During this process, the app will pop up a window to inform you of its progress
-
-```{r message=FALSE, warning=FALSE, eval=F}
-emotibit_parser(datafolder = "emotibit_data")
-```
-
-Next we can reprocess the heart rate signal using heart py and the PG sensor data. This may not be necessary if/when the emotibit uses a better algorithm on its chip. 
-
-```{r eval=F}
-emotibit_heartpy(datafolder = "emotibit_data")
-```
-
-Finally, we need to compile all the data for the measurements that we care about. This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable named ed
+The pre-processes is detailed here (). It's in a separate document because those processes require some additional software and python code to be installed. Assuming that you've done that step, or another lab member has done it for you, you can now compile all the data that's been pre-processed.  This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable
 
 ```{r}
 processed_emotibit_data <- emotibit_compile(edv = c("HR","EA","ACC"),datafolder = "emotibit_data")
 ```
-
-It also returns various import checks and plots of the data. For example, below we show a histogram of the start times for the three sessions
-
-```{r}
-processed_emotibit_data$p_start
-```
-
-### Wrapper function
-
-You can achieve everything above in one function call, that just runs through the processes in turn:
-
-```{r eval=F}
-processed_emotibit_data <- emotibit_process(datafolder = "raw_emotibit")
-```
-
 ## Behavioural data
 
 Now we can gather the behavioural data so we know what the participants were doing and seeing, and importantly, when. We want this trial data in the form of a data.table, typically called td, that has one row per person, per stimulus that they saw. This could be one of many 30 sec ads a person sees, or a 2 hour movie that each person sees once. 
@@ -98,7 +64,7 @@ Typically, I use more than one column, so that I can include information to iden
 
 Many of the experiments run in the eyethink lab use a standardized task called snappily *AV block multiple stim types*. There are functions to automatically process data from the various versions of this task to generate summary data.
 
-```{r}
+```{r echo=F}
 processed_gorilla <- gorilla_physio_presentation(datafolder = "gorilla_data")
 ```
 
@@ -130,18 +96,18 @@ A further thing is look out for are times in which you have a black bar and a re
 
 There's a function to handle those corrections quickly. You just give it a data.table of pids and their correct eids, and it will go through your pd, td and any other data passed in a list to make correction. Then we can rerun the merging process and store it.
 
-```{r}
+```{r }
 processed_gorilla <- gorilla_eid_corrections(processed_gorilla, corrections=data.table(pid=c(10370290),eid=c("red4")))
 data <- physio_merge(processed_emotibit_data ,processed_gorilla)
 ```
 
-The physio_merge function spits out the plot to check your data alignment, as before, and also a plot of theeda data per person and emotibit sensor. There is a threshold (20 by default, shown as a line on the plot) such that if the mean EDA reading for someone is below that, we set filter=0 and they get excluded. Also we exclude people where the range of EDA values is small (default <0.03). In there cases that's either someone who is very sweaty or not at all sweaty, or a misplaced sensor. We also set filter=0 for individual measurements that are outside of thresholds (defaults <.01 & >25). In the trial data, td, we summarize how many measurements were excluded from each trial (you might want to throw out trials with less than a certain % of valid meaurements), and the average of those values for each person is reported as % in the plot. 
+The physio_merge function spits out the plot to check your data alignment, as before, and also a plot of the eda data per person and emotibit sensor. There is a threshold (20 by default, shown as a line on the plot) such that if the mean EDA reading for someone is below that, we set filter=0 and they get excluded. Also we exclude people where the range of EDA values is small (default <0.03). In there cases that's either someone who is very sweaty or not at all sweaty, or a misplaced sensor. We also set filter=0 for individual measurements that are outside of thresholds (defaults <.01 & >25). In the trial data, td, we summarize how many measurements were excluded from each trial (you might want to throw out trials with less than a certain % of valid meaurements), and the average of those values for each person is reported as % in the plot. 
 
 The main output of this function are the set of data.tables that give you the emotitbit measurements moment by moment (ed), the trial data (td) where those are summarized over trials, the participant data (pd) summarized over people and the stimuli data (sd) summarized over stimuli items.
 
 You can look at the tiemcourse by plotting data$ed: 
 
-```{r}
+```{r echo=F}
 ggplot(data=data$ed,aes(x=tt,y=norm,colour=item))+geom_smooth()
 ```
 
@@ -164,7 +130,7 @@ If you are just interested in the behaviour and the physiological response of in
 In this toolbox we use Dale and Coco's (21014) [CRQA methods paper and R toolbox](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2014.00510/full). This package adds a set of function that basically iterate the crqa() function over lots of trials and pairs of dyads. 
 Here we have run the crqa_trials() function over our data of 3 participants watching two trials. We've turned on options to draw the pairs of time series and the cross recurrence plots for each pair of heart rate time series.
 
-```{r}
+```{r echo=F}
    hr_crqa <-   crqa_trials(data=data,radius=.6,delay=2,embed=4,mindiagline=6,normalize=T,
                             edvs= list("HR"),drawplot=T,plot_ts=T)
 ```
@@ -176,7 +142,7 @@ hr_crqa
 ```
 Typically, we also want these pairwise comparisons data aggregated over trials, conditions or stimuli items. There is a wrapper function crqq_full() that will do this step too. Also, above we specified various crqa parameters like embedding and delay. From lots of experiences, we have a set of standard values that we use by default. The crqq_full() function runs a set of specified analyses using these defaults and returns the full rqa table, and updates our data list with averages over trials, people and stimuli items. By default it will run crqas for HR, EA and a multidemensional HR.EA combination, and windowed analyses. But you can also specify a subset of these. Here I've just asked for EA and windowed EA which give us time course information, since those are the measures that we have found are the best indicators of engagement. 
 
-```{r}
+```{r echo=F, message=FALSE}
 data <- crqa_full(data=data,analyses = c("EA","EAwin"))
 ```
 
@@ -219,7 +185,7 @@ physio_movie(timeplot = timeplot,stimfile = "stim/benz.mp4")
 ```
 Here's what that would output if run:
 
-<video width="800" height="850" controls>
+<video width="600"  controls>
   <source src="benz_spark.mp4" type="video/mp4">
 </video>
 
