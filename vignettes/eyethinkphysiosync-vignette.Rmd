@@ -33,7 +33,7 @@ There are three main stages to this process: processing the raw emotibit data, t
 
 ### Emotibit pre-processing
 
-The pre-processes is detailed here (). It's in a separate document because those processes require some additional software and python code to be installed. Assuming that you've done that step, or another lab member has done it for you, you can now compile all the data that's been pre-processed.  This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable
+The pre-processes is detailed [on github](https://github.com/dcr-eyethink/eyethinkphysiosync/blob/main/vignettes/preprocessing_emotibit.md). It's in a separate document because those processes require some additional software and python code to be installed. Assuming that you've done that step, or another lab member has done it for you, you can now compile all the data that's been pre-processed.  This function goes through all the emotibit data folders and compiles the data for the DVs that are named. It saves the data out to a file, emotibit_data_comb.csv, and returns it as a datatable
 
 ```{r}
 processed_emotibit_data <- emotibit_compile(edv = c("HR","EA","ACC"),datafolder = "emotibit_data")
