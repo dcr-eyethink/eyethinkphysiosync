@@ -1,7 +1,7 @@
 Package: eyethinkphysiosync
 Type: Package
 Title: Tools for processing physiological data and calculating synchrony
-Version: 0.2.0
+Version: 0.3.0
 Author: person("Daniel","C." "Richardson",
   email = "dcr@eyethink.org",
   role = c("aut", "cre"),
@@ -26,5 +26,6 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Imports: 
+    crqa,
     data.table,
     jsonlite
