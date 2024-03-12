@@ -3,7 +3,8 @@ title: "Preprocessing Emotibit"
 author: "dcr"
 date: "2024-03-12"
 output: 
-  md_document
+  html_document: 
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
