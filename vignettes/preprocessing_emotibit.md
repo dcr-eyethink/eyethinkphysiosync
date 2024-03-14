@@ -18,7 +18,7 @@ to parse the raw data. Thirdly, optionally, you can use
 to reprocess the heart rate data, which seems to give a more relaible
 result than the heart rate processor on the emotibit chip (at least, for
 now). See the manual entry for emotitbit\_heartpy for [installation
-instructions](https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotitbit_heartpy.html).
+instructions](https://dcr-eyethink.github.io/eyethinkphysiosync/reference/emotibit_heartpy.html).
 
 ## Processing raw emotibit data
 
@@ -92,7 +92,7 @@ sessions. Not very interesting in this example, of course
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](/private/var/folders/rn/gp1l69bx3szcd4n0grjzm4b40000gp/T/Rtmpf2dgu2/preview-e2af438bb231.dir/preprocessing_emotibit_files/figure-markdown_strict/unnamed-chunk-6-1.png)
+![](/private/var/folders/rn/gp1l69bx3szcd4n0grjzm4b40000gp/T/RtmpIUITZI/preview-229b4e9a1dae.dir/preprocessing_emotibit_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
 ### Wrapper function
 
