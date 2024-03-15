@@ -148,10 +148,11 @@ emotibit_session_folders <- function(datafolder=NULL,overwrite=F,
 
     }else{
       # file is too small
-      probd <- paste0(dirname(dirname(df)),"/problem data" )
+      probd <- paste0(dirname(datafolder),"/problem data" )
+
       if (!dir.exists( probd  )){dir.create(probd )  }
-      file.copy(from = df, to = probd)
-      file.copy(from = gsub(x=df,pattern = ".csv",replacement = ".json"), to = probd)
+      file.copy(from = paste0(datafolder,"/",df), to = probd)
+      file.copy(from = gsub(x=paste0(datafolder,"/",df),pattern = ".csv",replacement = "_info.json"), to = probd)
 
     }
     # get next .csv file
