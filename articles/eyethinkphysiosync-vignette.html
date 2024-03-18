@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">eyethinkphysiosync</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -326,12 +326,7 @@ geom_line()</p>
 separate .csv files with one command. It will put them in a folder
 called ‘processed’ by default, or you can specify a different name</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://dcr-eyethink.github.io/eyethinkdata/reference/saveout_datalist.html" class="external-link">saveout_datalist</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ed  saved</span></span>
-<span><span class="co">#&gt; dm  saved</span></span>
-<span><span class="co">#&gt; td  saved</span></span>
-<span><span class="co">#&gt; pd  saved</span></span>
-<span><span class="co">#&gt; sd  saved</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://dcr-eyethink.github.io/eyethinkdata/reference/saveout_datalist.html" class="external-link">saveout_datalist</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></code></pre></div>
 <p>If you are just interested in the behaviour and the physiological
 response of individuals, you can stop here. Or, in the next step, we
 take the ed data and calculate the physiological synchrony between these
@@ -365,8 +360,8 @@ pairs of time series for each pair of heart rate time series.</p>
 <p><img src="eyethinkphysiosync-vignette_files/figure-html/unnamed-chunk-13-6.png" width="90%"></p>
 <pre><code><span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; That took me</span></span>
-<span><span class="co">#&gt;         user       system      elapsed </span></span>
-<span><span class="co">#&gt; 1.535000e-02 8.333333e-05 1.998333e-02</span></span></code></pre>
+<span><span class="co">#&gt;       user     system    elapsed </span></span>
+<span><span class="co">#&gt; 0.01498333 0.00040000 0.01808333</span></span></code></pre>
 <p>The function returns crqa stats on every pairwise comparison for
 every trial.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
@@ -429,7 +424,7 @@ measures that we have found are the best indicators of engagement.</p>
 <span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
 <span><span class="co">#&gt; That took me</span></span>
 <span><span class="co">#&gt;        user      system     elapsed </span></span>
-<span><span class="co">#&gt; 0.001583333 0.000000000 0.001266667 </span></span>
+<span><span class="co">#&gt; 0.001633333 0.000000000 0.001316667 </span></span>
 <span><span class="co">#&gt; Proportions where we have no RR data</span></span>
 <span><span class="co">#&gt;       edv    V1</span></span>
 <span><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;</span></span>
@@ -443,8 +438,8 @@ measures that we have found are the best indicators of engagement.</p>
 <span><span class="co">#&gt; EA  item:  cluster§pizza§pizza.mp4§man   progress 100 %</span></span>
 <span><span class="co">#&gt;   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</span></span>
 <span><span class="co">#&gt; That took me</span></span>
-<span><span class="co">#&gt;         user       system      elapsed </span></span>
-<span><span class="co">#&gt; 0.0173500000 0.0002666667 0.0162666667</span></span></code></pre>
+<span><span class="co">#&gt;       user     system    elapsed </span></span>
+<span><span class="co">#&gt; 0.01760000 0.00005000 0.01626667</span></span></code></pre>
 <p>That probably took a matter of seconds, since we only have 3 people
 watching 2 stimuli. But since pairwise comparisons are at the heart of
 crqa, you’ll find that processing time increases rapidly with increasing
