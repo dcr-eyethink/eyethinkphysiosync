@@ -119,7 +119,7 @@ ggplot(data=data$dm[metric=="norm" & edv=="EA"],aes(x=t,y=y,colour=item))+geom_l
 
 The whole data list of different data types can be saved out into separate .csv files with one command. It will put them in a folder called 'processed' by default, or you can specify a different name
 
-```{r}
+```{r eval=F}
 saveout_datalist(data)
 ```
 
