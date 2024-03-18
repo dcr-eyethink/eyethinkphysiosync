@@ -30,10 +30,28 @@ emotibit_heartpy <- function(datafolder=NULL,heartpy_reparse=F,winsize = 8,
     if (!file.exists(paste0(session,"/","emotibit_data_HR.csv")) | heartpy_reparse==T){
     #  we don't have a heartpy outout, or we are forcing a reparse
 
-    system(command = paste0("cd ",heartpy_location,
+      if (Sys.info()["sysname"]=="Windows"){
+      cat("You still don't have Mac?\n")
+
+        ############# PC system call
+
+        command_pc <-  paste0("cd ",heartpy_location,
+                              " && source venv/bin/activate && python process_bpm.py -i "
+                              ,session,"/","emotibit_data_PG.csv",
+                              " -w ",winsize)
+        cat("This is the system command that I am trying\n", command_pc)
+
+        system2(command =command_pc)
+
+      }else{
+        ############# MAC system call
+
+          system(command = paste0("cd ",heartpy_location,
                             " && source venv/bin/activate && python process_bpm.py -i '"
                               ,session,"/","emotibit_data_PG.csv",
                             "' -w ",winsize))
+        }
+
     cat ("\n",basename(session)," heartpy processed")
     }
     else
