@@ -23,9 +23,12 @@ for (session in sessionfolders){
     # we are running the parser cos either hasn't been run before
     # or we want to reparse
 
-    emdata <- paste0(session,"/emotibit_data.csv")
+    #emdata <- paste0(session,"/emotibit_data.csv")
 
-    system(command = paste0(parser_location," '",emdata,"'"))
+    #system(command = paste0(parser_location," '",emdata,"'"))
+
+    emdata <- paste0(" '",session,"/emotibit_data.csv","'")
+    system2(parser_location, args = emdata)
 
     # calculate ACC
 
