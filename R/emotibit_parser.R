@@ -27,8 +27,15 @@ for (session in sessionfolders){
 
     #system(command = paste0(parser_location," '",emdata,"'"))
 
+
+    if (Sys.info()["sysname"]=="Windows"){
+      cat("Have you considered getting a Mac?\n")
+      emdata <- paste0(session,"/emotibit_data.csv")
+      system2(parser_location, args = emdata)
+    }else{
     emdata <- paste0(" '",session,"/emotibit_data.csv","'")
     system2(parser_location, args = emdata)
+    }
 
     # calculate ACC
 
