@@ -133,6 +133,9 @@ if (dim(nodet)[1]>0){
     }
 
   if(!is.null(rw)){
+
+    if (dim(rw)[1]>0){
+
     if (is.null(data$rw)){
       data$rw <- rw
     }else{
@@ -148,7 +151,7 @@ if (dim(nodet)[1]>0){
     }else{
       data$dm <- rbind(data$dm,dm,fill=T)
     }
-
+}
   }
 
   return(data)
